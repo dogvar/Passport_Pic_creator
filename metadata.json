@@ -1,0 +1,7 @@
+{
+  "name": "AI Passport & Portrait Pro",
+  "description": "An AI-powered tool to convert photos into compliant passport pictures and generate professional portraits using Google's Gemini API.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
