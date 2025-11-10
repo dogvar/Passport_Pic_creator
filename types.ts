@@ -11,9 +11,15 @@ export interface Option {
   value: string;
 }
 
+export interface OptionGroup {
+    label: string;
+    options: Option[];
+}
+
 export interface CountrySpec {
   name: string;
-  width: number;
-  height: number;
-  background: 'white' | 'light grey' | 'blue';
+  photoSizeMM: { width: number; height: number; };
+  headHeightPercentage: { min: number; max: number; };
+  allowedBackgrounds: string[];
+  otherRequirements: string[];
 }

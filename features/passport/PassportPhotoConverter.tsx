@@ -6,7 +6,7 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import ResultDisplay from '../../components/ResultDisplay';
 import OptionSelector from '../../components/OptionSelector';
 import ComplianceChecklist from '../../components/ComplianceChecklist';
-import { COUNTRY_SPECS, PASSPORT_BG_PROMPTS, PASSPORT_VALIDATION_PROMPT } from '../../constants';
+import { COUNTRY_SPECS, PASSPORT_BG_PROMPTS, PASSPORT_VALIDATION_PROMPT, PASSPORT_FORMAL_ATTIRE } from '../../constants';
 import { CountrySpec } from '../../types';
 
 const PassportPhotoConverter: React.FC = () => {
@@ -17,7 +17,10 @@ const PassportPhotoConverter: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  
   const [selectedCountry, setSelectedCountry] = useState<CountrySpec>(COUNTRY_SPECS[0]);
+  const [selectedBackground, setSelectedBackground] = useState<string>(COUNTRY_SPECS[0].allowedBackgrounds[0]);
+  const [selectedAttire, setSelectedAttire] = useState<string>(PASSPORT_FORMAL_ATTIRE[0].value);
 
   const resetState = useCallback(() => {
     setBase64Image(null);
@@ -28,6 +31,8 @@ const PassportPhotoConverter: React.FC = () => {
     setGenerationError(null);
     setGeneratedImages([]);
     setSelectedCountry(COUNTRY_SPECS[0]);
+    setSelectedBackground(COUNTRY_SPECS[0].allowedBackgrounds[0]);
+    setSelectedAttire(PASSPORT_FORMAL_ATTIRE[0].value);
   }, []);
 
   const handleImageUpload = useCallback(async (b64Image: string, file: File) => {
@@ -42,7 +47,7 @@ const PassportPhotoConverter: React.FC = () => {
       const result = await validateImage(b64Image, PASSPORT_VALIDATION_PROMPT);
       if (!result.isValid) {
         setValidationError(result.feedback);
-        setBase64Image(null); // Clear image if not valid
+        setBase64Image(null); 
         setOriginalFile(null);
       }
     } catch (error) {
@@ -61,12 +66,51 @@ const PassportPhotoConverter: React.FC = () => {
     setIsGenerating(true);
     setGenerationError(null);
     
-    const backgroundPrompt = PASSPORT_BG_PROMPTS[selectedCountry.background];
-    const fullPrompt = `Generate a high-resolution, regulation-compliant passport photo of the person in the image. 
-    Crucially, replace the existing background with ${backgroundPrompt}.
-    The person's facial features, hair, and clothing must remain COMPLETELY UNCHANGED. Do not alter their appearance.
-    Ensure the lighting is even and there are no shadows on the face or background.
-    The final image should be cropped to show the head and top of the shoulders, centered in the frame.`;
+    const { photoSizeMM, headHeightPercentage, otherRequirements } = selectedCountry;
+    const aspectRatio = `${photoSizeMM.width}:${photoSizeMM.height}`;
+    const backgroundPrompt = PASSPORT_BG_PROMPTS[selectedBackground];
+    
+    const attirePrompt = selectedAttire !== 'no change' 
+        ? `The person should be dressed in ${selectedAttire}. The new attire must look realistic and appropriate for a passport photo.`
+        : 'The person\'s clothing must remain completely unchanged from the original photo.';
+
+    const fullPrompt = `
+      PRIMARY DIRECTIVE: DO NOT CHANGE THE FACE. The user's facial features, hair, and head shape must be preserved with 100% accuracy. This is a technical conversion, not an artistic interpretation.
+
+      TASK: Convert the user's photo into a regulation-compliant passport photo according to the following strict technical specifications.
+
+      SPECIFICATIONS:
+      1.  **Image Geometry**:
+          -   Final Aspect Ratio: ${aspectRatio}. The final image MUST conform to this exact ratio with no distortion.
+          -   Composition: The image must be a close-up of the head and top of the shoulders.
+          -   Head Size: The height of the head (from the bottom of the chin to the top of the hair) MUST occupy between ${headHeightPercentage.min}% and ${headHeightPercentage.max}% of the total image height.
+          -   Centering: The head must be centered horizontally within the frame.
+          -   No Padding: The generated image MUST fill the entire canvas of the specified aspect ratio. There must be absolutely no borders, letterboxing, or padding of any kind.
+
+      2.  **Subject & Attire**:
+          -   Identity Lock: The subject's face, hair, and head MUST be identical to the source image.
+          -   Attire: ${attirePrompt}
+
+      3.  **Background**:
+          -   Replace the original background completely with ${backgroundPrompt}. The background must be featureless and uniform.
+
+      4.  **Lighting & Quality**:
+          -   Correct any uneven lighting on the subject's face to be uniform and clear.
+          -   Remove any shadows on the face or in the background.
+          -   The final image must be high-resolution, sharp, and in focus.
+
+      5.  **Other Official Requirements**:
+          -   ${otherRequirements.join('\n          -   ')}
+
+      FINAL VERIFICATION CHECKLIST (Internal):
+      Before outputting the image, verify it meets these non-negotiable criteria:
+      - Is the user's face identical to the source image? -> Must be YES.
+      - Does the image aspect ratio exactly match ${aspectRatio}? -> Must be YES.
+      - Is the head height between ${headHeightPercentage.min}% and ${headHeightPercentage.max}% of the total height? -> Must be YES.
+      - Does the image fill the entire frame with no padding? -> Must be YES.
+
+      Generate two distinct options that both strictly adhere to all of the above specifications.
+    `;
 
     try {
       const images = await generateTwoImages(base64Image, fullPrompt);
@@ -89,10 +133,12 @@ const PassportPhotoConverter: React.FC = () => {
     document.body.removeChild(link);
   };
   
-  const countryOptions = COUNTRY_SPECS.map(c => ({ label: c.name, value: c.name }));
   const handleCountryChange = (value: string) => {
       const country = COUNTRY_SPECS.find(c => c.name === value);
-      if(country) setSelectedCountry(country);
+      if(country) {
+          setSelectedCountry(country);
+          setSelectedBackground(country.allowedBackgrounds[0]);
+      }
   }
 
   const renderContent = () => {
@@ -112,7 +158,7 @@ const PassportPhotoConverter: React.FC = () => {
                 <img src={`data:image/jpeg;base64,${base64Image}`} alt="Uploaded preview" className="w-32 h-32 rounded-lg object-cover" />
                 <div className="flex-1">
                     <p className="text-green-400 font-semibold mb-2 text-center sm:text-left">✓ Photo meets basic requirements!</p>
-                    <p className="text-sm text-gray-400 text-center sm:text-left">Next, select your country to ensure the correct background color and format.</p>
+                    <p className="text-sm text-gray-400 text-center sm:text-left">Next, configure the output settings for your passport photo.</p>
                 </div>
             </div>
             {generationError && (
@@ -120,14 +166,35 @@ const PassportPhotoConverter: React.FC = () => {
                     <p>{generationError}</p>
                 </div>
             )}
-            <OptionSelector 
-                label="Select Country for Specifications"
-                options={countryOptions}
-                value={selectedCountry.name}
-                onChange={handleCountryChange}
-                valueKey="value"
-                labelKey="label"
-            />
+            <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <OptionSelector 
+                    label="Country"
+                    options={COUNTRY_SPECS}
+                    value={selectedCountry.name}
+                    onChange={handleCountryChange}
+                    valueKey="name"
+                    labelKey="name"
+                />
+                 <div className="text-center sm:text-left bg-gray-700/50 p-3 rounded-lg">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Photo Dimensions</label>
+                    <p className="text-white font-mono">{selectedCountry.photoSizeMM.width}mm x {selectedCountry.photoSizeMM.height}mm</p>
+                </div>
+            </div>
+             <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <OptionSelector 
+                    label="Background Color"
+                    options={selectedCountry.allowedBackgrounds.map(bg => ({ label: bg.charAt(0).toUpperCase() + bg.slice(1), value: bg }))}
+                    value={selectedBackground}
+                    onChange={setSelectedBackground}
+                />
+                 <OptionSelector 
+                    label="Formal Attire (Optional)"
+                    options={PASSPORT_FORMAL_ATTIRE}
+                    value={selectedAttire}
+                    onChange={setSelectedAttire}
+                />
+            </div>
+
             <button
                 onClick={handleGenerate}
                 className="w-full px-8 py-4 bg-purple-600 text-white font-bold rounded-lg shadow-md hover:bg-purple-700 transition-transform transform hover:scale-105"
@@ -165,7 +232,7 @@ const PassportPhotoConverter: React.FC = () => {
     <div className="flex flex-col items-center gap-4">
       <h2 className="text-3xl font-bold text-center">Passport Photo Converter</h2>
       <p className="text-gray-400 mb-4 text-center">
-        Upload your photo, and we'll automatically adjust the background and formatting to meet official requirements.
+        Upload your photo, and we'll automatically adjust it to meet official requirements.
       </p>
       {renderContent()}
     </div>
