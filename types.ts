@@ -1,33 +1,19 @@
+// Fix: Provide full content for types.ts
 export type FeatureMode = 'passport' | 'portrait';
-
-export interface Option {
-  value: string;
-  label: string;
-}
-
-export interface PassportCountry {
-  name: string;
-  dimensions: string;
-  aspectRatio: number;
-  headHeightPercentage: [number, number];
-  allowedBackgrounds: string[];
-}
 
 export interface ValidationResult {
   isValid: boolean;
   feedback: string;
 }
 
-export interface AttireOption {
+export interface Option {
+  label: string;
+  value: string;
+}
+
+export interface CountrySpec {
   name: string;
-  prompt: string;
-}
-
-export interface WardrobeCategory {
-  upper: AttireOption[];
-  lower: AttireOption[];
-}
-
-export interface WardrobeCollection {
-  [key: string]: WardrobeCategory;
+  width: number;
+  height: number;
+  background: 'white' | 'light grey' | 'blue';
 }
