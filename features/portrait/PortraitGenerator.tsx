@@ -59,13 +59,24 @@ const PortraitGenerator: React.FC = () => {
     setStage('processing');
     setError(null);
 
-    const prompt = `You are an expert portrait photographer's AI assistant. Your task is to transform the user's photo into a high-quality, professional portrait. Follow these steps in order, treating them as strict rules:
-1.  **CRITICAL RULE**: Preserve the person's facial features and identity with 100% accuracy. Do not alter their face, hair, or head shape. This is your highest priority.
-2.  **Lighting and Quality**: First, correct any uneven lighting or harsh shadows in the original photo to create a flattering, professional, and well-lit look. Enhance the overall image quality.
-3.  **Attire**: ${attire !== 'no change to attire' ? `Change the person's clothing to '${attire}'. The new clothing should look realistic, natural, and fit their body shape and pose.` : 'Keep their original clothing.'}
-4.  **Pose and Expression**: Subtly adjust the person's pose to be a '${pose}' and refine their facial expression to be '${expression}'. Ensure these changes are minor and look natural.
-5.  **Background**: Replace the original background with a realistic scene of '${background}'. Ensure the lighting on the person matches the new background.
-6.  **Final Composition**: The final image must be a high-resolution portrait with a standard portrait aspect ratio (like 4:5 or 3:4, not square). Apply a '${style}' stylistic filter. The result should be suitable for a professional profile like LinkedIn.`;
+    const prompt = `
+**PRIMARY DIRECTIVE: DO NOT CHANGE THE FACE.**
+
+You are a creative AI portrait artist, but your creativity has one absolute rule: you must preserve the user's identity perfectly. You are explicitly forbidden from altering the person's facial features, hair, skin tone, or head shape. Your task is to enhance the photo *around* the person, not change who they are. Any result that changes the face is a complete failure.
+
+Follow this procedure:
+
+1.  **Identity Lock**: Before any creative work, lock in the subject's exact facial likeness, hair, and head shape from the original photo. This is your foundational constraint.
+
+2.  **Lighting and Quality**: Correct uneven lighting and harsh shadows on the subject to create a flattering, professional look. Enhance the overall photo clarity without altering features.
+
+3.  **Attire**: ${attire !== 'no change to attire' ? `Change the person's clothing to '${attire}'. The new clothing must look realistic and fit their body shape and pose naturally, integrated with their unaltered head and neck.` : 'Keep their original clothing.'}
+
+4.  **Pose and Expression**: Subtly and realistically adjust the person's pose to be a '${pose}' and refine their expression to be '${expression}'. These changes must be extremely minor and maintain the core identity.
+
+5.  **Background**: Replace the original background with a high-quality, realistic scene of '${background}'. Ensure the lighting on the person is consistent with the new environment.
+
+6.  **Final Touches**: The final image must be a high-resolution portrait with a standard portrait aspect ratio (e.g., 4:5). Apply a '${style}' stylistic filter to complete the look. The result should be professional and authentic to the original person.`;
 
     try {
       const generated = await generateImage(originalImage, prompt);

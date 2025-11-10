@@ -76,26 +76,30 @@ const PassportPhotoConverter: React.FC = () => {
     };
 
     const basePrompt = `
-You are a precision AI photo processor specializing in official ID photos. Your task is to convert the user's photo into a compliant passport photo. Follow these steps meticulously. This is a technical process; do not be creative.
+**PRIMARY DIRECTIVE: DO NOT CHANGE THE FACE.**
 
-**Step 1: ABSOLUTE CRITICAL RULE - IDENTITY PRESERVATION**
-- Your HIGHEST PRIORITY is to preserve the person's facial features, hair, and head shape with 100% accuracy.
-- **DO NOT, under any circumstances, alter the person's face.**
-- Isolate the person's head and shoulders from the original image first. All subsequent operations will be on this isolated subject.
+You are a highly specialized AI image processor. Your single most important instruction is to preserve the user's identity perfectly. You are explicitly forbidden from altering the person's facial features, hair, skin tone, or head shape. All operations must be performed *around* the original subject's likeness. Any result that changes the face is a complete failure.
 
-**Step 2: CORRECTION**
-- Correct any uneven lighting on the person's face to be uniform and shadow-free.
-- Enhance the photo quality to be sharp and clear.
+Follow this strict technical procedure:
 
-**Step 3: ATTIRE**
-- ${attire !== 'no change to attire' ? `Change the person's clothing to '${attire}'. The new clothing must look realistic, fit naturally, and be centered.` : 'Keep the original clothing but ensure it looks professional.'}
+**Step 1: Identity Lock**
+- Your absolute first action is to lock in the subject's facial identity from the original photo. This is a non-negotiable prerequisite.
+- Create a perfect, unaltered copy of the person's head, face, and hair.
 
-**Step 4: COMPOSITION & CROPPING (NON-NEGOTIABLE)**
-- Place the corrected subject onto a plain, solid '${backgroundColor}' background.
-- The final image's aspect ratio MUST BE exactly ${selectedCountry.aspectRatio.toFixed(4)}.
-- The person's head, from the bottom of the chin to the top of the hair, MUST occupy between ${selectedCountry.headHeightPercentage[0]}% and ${selectedCountry.headHeightPercentage[1]}% of the total image height.
+**Step 2: Isolate and Correct**
+- Isolate the person's head and shoulders.
+- On this isolated subject, correct any uneven lighting to be uniform and shadow-free.
+- Enhance photo clarity without changing features.
+
+**Step 3: Attire Modification**
+- ${attire !== 'no change to attire' ? `Replace the clothing with '${attire}'. The new attire must fit naturally under the subject's unaltered head and neck.` : 'Keep the original clothing, ensuring it looks neat.'}
+
+**Step 4: Final Composition (Strict Compliance)**
+- Place the modified subject onto a solid '${backgroundColor}' background.
+- Crop the final image to an exact aspect ratio of ${selectedCountry.aspectRatio.toFixed(4)}. This is a strict mathematical requirement.
+- The person's head (chin to top of hair) MUST be between ${selectedCountry.headHeightPercentage[0]}% and ${selectedCountry.headHeightPercentage[1]}% of the image height.
 - Center the head horizontally.
-- The final output must be a high-resolution, head-and-shoulders portrait only.
+- The output must be a high-resolution, head-and-shoulders portrait only.
 `;
     
     const prompt1 = `${basePrompt}\n**Final Instruction:** Execute these steps with technical precision. Focus on a natural look for lighting and attire.`;
