@@ -6,7 +6,7 @@ export const PASSPORT_COUNTRIES: PassportCountry[] = [
     dimensions: '2x2 inches (51x51 mm)', 
     aspectRatio: 1, 
     headHeightPercentage: [50, 69],
-    allowedBackgrounds: ['white'] 
+    allowedBackgrounds: ['white', 'off-white'] 
   },
   { 
     name: 'United Kingdom', 
@@ -20,7 +20,7 @@ export const PASSPORT_COUNTRIES: PassportCountry[] = [
     dimensions: '70x50 mm', 
     aspectRatio: 50 / 70, 
     headHeightPercentage: [44, 50], // 31mm-36mm of 70mm height
-    allowedBackgrounds: ['white', 'light-colored plain'] 
+    allowedBackgrounds: ['white', 'light grey'] 
   },
   { 
     name: 'Australia', 
@@ -41,15 +41,29 @@ export const PASSPORT_COUNTRIES: PassportCountry[] = [
     dimensions: '48x33 mm', 
     aspectRatio: 33 / 48, 
     headHeightPercentage: [58, 75], // 28mm-33mm of 48mm height
-    allowedBackgrounds: ['white'] 
+    allowedBackgrounds: ['white', 'light blue'] 
   },
   { 
     name: 'India', 
     dimensions: '2x2 inches (51x51 mm)', 
     aspectRatio: 1, 
     headHeightPercentage: [60, 70],
-    allowedBackgrounds: ['white'] 
+    allowedBackgrounds: ['white', 'off-white'] 
   },
+  {
+    name: 'Japan',
+    dimensions: '45x35 mm',
+    aspectRatio: 35 / 45,
+    headHeightPercentage: [70, 80],
+    allowedBackgrounds: ['white', 'off-white', 'light grey']
+  },
+  {
+    name: 'Brazil',
+    dimensions: '70x50 mm',
+    aspectRatio: 50 / 70,
+    headHeightPercentage: [70, 80],
+    allowedBackgrounds: ['white']
+  }
 ];
 
 export const FORMAL_ATTIRE: Option[] = [

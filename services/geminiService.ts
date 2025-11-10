@@ -72,8 +72,6 @@ export const generateImage = async (base64Image: string, prompt: string): Promis
   try {
     const mimeType = getMimeType(base64Image);
 
-    const finalPrompt = `${prompt}\n\n**CRITICAL INSTRUCTION**: The person's facial features, identity, and structure in the output image MUST be 100% identical to the original photo. DO NOT change their face in any way. Only modify background, clothing, and overall image composition as requested.`;
-
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: {
@@ -85,7 +83,7 @@ export const generateImage = async (base64Image: string, prompt: string): Promis
             },
           },
           {
-            text: finalPrompt,
+            text: prompt,
           },
         ],
       },

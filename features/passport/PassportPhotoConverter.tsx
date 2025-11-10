@@ -78,13 +78,12 @@ const PassportPhotoConverter: React.FC = () => {
     setStage('processing');
     setError(null);
 
-    const prompt = `Critically generate a compliant passport photo for ${selectedCountry.name} based on the user's photo, following these rules strictly:
-1.  **Lighting Correction**: First, correct any uneven lighting and mild shadows on the person's face to ensure the final result is evenly and brightly lit, as required for official documents.
-2.  **Cropping and Aspect Ratio**: Crop the image to a precise aspect ratio of ${selectedCountry.aspectRatio.toFixed(4)} (width/height). The final image must be high resolution and sharp.
-3.  **Head Position**: The person's head, measured from the bottom of the chin to the top of the crown, MUST occupy between ${selectedCountry.headHeightPercentage[0]}% and ${selectedCountry.headHeightPercentage[1]}% of the image's total height. The head must be centered horizontally.
-4.  **Background**: Completely replace the original background with a solid, uniform, and plain ${backgroundColor} color. There must be no shadows or patterns in the background.
-5.  **Attire**: ${attire !== 'no change to attire' ? `If the user is not wearing formal attire, realistically change their clothing to: ${attire}.` : 'The user\'s attire should remain unchanged.'}
-6.  **Quality Checks**: The person must be facing forward with a neutral expression. The final image must be clear and sharp.`;
+    const prompt = `You are an expert passport photo generator. Your task is to convert the user's photo into a compliant passport photo for ${selectedCountry.name}. Follow these steps in order, treating them as strict, non-negotiable rules:
+1.  **MOST IMPORTANT RULE**: You MUST preserve the person's facial features and identity from the original photo with 100% accuracy. Do not alter their face, hair, or head shape in any way. This is the highest priority.
+2.  **Isolate and Prepare Subject**: First, focus only on the person's head and shoulders from the original image. Correct any uneven lighting or soft shadows on their face to create a bright, clear, and professional look suitable for an official document.
+3.  **Apply Attire**: ${attire !== 'no change to attire' ? `Change their clothing to ${attire}. Ensure the new clothing looks realistic and natural, fitting their body shape.` : 'Keep their original clothing.'}
+4.  **Set Background**: Place the modified person onto a completely plain, uniform, and solid ${backgroundColor} background. There must be no shadows or texture in the background.
+5.  **Final Cropping and Framing**: This step is critical. The final image must be a high-resolution portrait cropped to a precise ${selectedCountry.dimensions} aspect ratio (${selectedCountry.aspectRatio.toFixed(4)} width/height). The person's head must be centered horizontally. The head height, from the bottom of the chin to the top of the hair/crown, MUST occupy between ${selectedCountry.headHeightPercentage[0]}% and ${selectedCountry.headHeightPercentage[1]}% of the photo's total height. Frame the image to show the top of the shoulders.`;
     
     try {
       const generated = await generateImage(originalImage, prompt);
@@ -139,6 +138,11 @@ const PassportPhotoConverter: React.FC = () => {
             <img src={`data:image/jpeg;base64,${originalImage}`} alt="Preview" className="max-h-48 w-auto rounded-lg shadow-lg" />
             <div className="w-full max-w-md space-y-4">
               <OptionSelector label="Country" options={PASSPORT_COUNTRIES} value={selectedCountryName} onChange={handleCountryChange} valueKey="name" labelKey="name"/>
+              <div className="text-center p-2 bg-gray-700/50 rounded-md">
+                <p className="text-sm text-gray-300">
+                  Output Size: <span className="font-semibold text-white">{selectedCountry.dimensions}</span>
+                </p>
+              </div>
               <OptionSelector label="Background Color" options={backgroundOptions} value={backgroundColor} onChange={setBackgroundColor} />
               <OptionSelector label="Attire" options={FORMAL_ATTIRE} value={attire} onChange={setAttire} />
             </div>
