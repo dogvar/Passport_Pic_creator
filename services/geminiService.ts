@@ -19,15 +19,41 @@ const generateImageFromParts = async (parts: Part[]): Promise<string> => {
             },
         });
         
-        for (const part of response.candidates?.[0]?.content?.parts || []) {
-            if (part.inlineData) {
-              return part.inlineData.data;
+        const candidate = response.candidates?.[0];
+
+        // Happy path: image is generated
+        for (const part of candidate?.content?.parts || []) {
+            if (part.inlineData?.data) {
+                return part.inlineData.data;
             }
         }
-        throw new Error("No image was generated in the response.");
+        
+        // Unhappy path: no image generated. Let's find out why.
+        console.error("Gemini did not return an image. Full response:", JSON.stringify(response, null, 2));
+
+        const finishReason = candidate?.finishReason;
+        const blockReason = response.promptFeedback?.blockReason;
+
+        if (finishReason === 'SAFETY' || blockReason === 'SAFETY') {
+            throw new Error("The request was blocked due to safety policies. Please try a different photo, attire, or prompt.");
+        }
+        if (finishReason === 'RECITATION') {
+            throw new Error("The request was blocked to prevent recitation of copyrighted material. Please adjust your prompt.");
+        }
+        if (finishReason) {
+             throw new Error(`Generation failed with reason: ${finishReason}. Please try again or adjust your settings.`);
+        }
+        
+        throw new Error("The model did not generate an image. This could be due to a refusal to process the request or a transient error.");
+
     } catch (error) {
-        console.error("Error generating image with Gemini:", error);
-        throw new Error("Failed to generate image. The model may have refused the request due to safety policies. Please try a different photo or prompt.");
+        console.error("Error during image generation call:", error);
+        // Re-throw the error, which might be a specific one from our checks above, or a network/API error.
+        if (error instanceof Error) {
+            throw error;
+        }
+        // Fallback for non-Error objects being thrown
+        throw new Error("An unknown error occurred during image generation.");
     }
 };
 
@@ -58,8 +84,11 @@ export const generateTwoImages = async (base64Image: string, prompt: string): Pr
         const results = await Promise.all(generationPromises);
         return results;
     } catch (error) {
-        console.error("Error generating portrait images with Gemini:", error);
-        throw new Error("Failed to generate portrait images. One or more generations may have failed.");
+        console.error("Error generating two images with Gemini:", error);
+        if (error instanceof Error) {
+            throw error; // Propagate the specific error
+        }
+        throw new Error("Failed to generate images. One of the generations may have failed.");
     }
 };
 
@@ -76,8 +105,11 @@ export const generateTwoImagesFromParts = async (parts: Part[]): Promise<string[
         const results = await Promise.all(generationPromises);
         return results;
     } catch (error) {
-        console.error("Error generating portrait images from parts:", error);
-        throw new Error("Failed to generate portrait images. One or more generations may have failed.");
+        console.error("Error generating two images from parts:", error);
+        if (error instanceof Error) {
+            throw error; // Propagate the specific error
+        }
+        throw new Error("Failed to generate images. One of the generations may have failed.");
     }
 }
 
