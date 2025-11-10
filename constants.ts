@@ -1,137 +1,80 @@
-import { PassportCountry, Option, WardrobeCollection } from './types';
+
+import { PassportCountry, Option, PortraitStyle } from './types';
 
 export const PASSPORT_COUNTRIES: PassportCountry[] = [
-  { 
-    name: 'United States', 
-    dimensions: '2x2 inches (51x51 mm)', 
-    aspectRatio: 1, 
+  {
+    name: 'United States',
+    dimensions: '2x2 inches',
+    aspectRatio: 1,
     headHeightPercentage: [50, 69],
-    allowedBackgrounds: ['white', 'off-white'] 
-  },
-  { 
-    name: 'United Kingdom', 
-    dimensions: '45x35 mm', 
-    aspectRatio: 35 / 45, 
-    headHeightPercentage: [64, 75], // 29mm-34mm of 45mm height
-    allowedBackgrounds: ['light grey', 'cream'] 
-  },
-  { 
-    name: 'Canada', 
-    dimensions: '70x50 mm', 
-    aspectRatio: 50 / 70, 
-    headHeightPercentage: [44, 50], // 31mm-36mm of 70mm height
-    allowedBackgrounds: ['white', 'light grey'] 
-  },
-  { 
-    name: 'Australia', 
-    dimensions: '45-50mm high and 35-40mm wide', 
-    aspectRatio: 35 / 45, 
-    headHeightPercentage: [66, 80], // 32mm-36mm of 45-50mm height (approx)
-    allowedBackgrounds: ['light grey', 'white'] 
-  },
-  { 
-    name: 'Schengen Area', 
-    dimensions: '45x35 mm', 
-    aspectRatio: 35 / 45, 
-    headHeightPercentage: [70, 80],
-    allowedBackgrounds: ['light grey', 'light blue', 'white'] 
-  },
-  { 
-    name: 'China', 
-    dimensions: '48x33 mm', 
-    aspectRatio: 33 / 48, 
-    headHeightPercentage: [58, 75], // 28mm-33mm of 48mm height
-    allowedBackgrounds: ['white', 'light blue'] 
-  },
-  { 
-    name: 'India', 
-    dimensions: '2x2 inches (51x51 mm)', 
-    aspectRatio: 1, 
-    headHeightPercentage: [60, 70],
-    allowedBackgrounds: ['white', 'off-white'] 
+    allowedBackgrounds: ['white', 'off-white'],
   },
   {
-    name: 'Japan',
-    dimensions: '45x35 mm',
+    name: 'Schengen Area / EU',
+    dimensions: '35x45 mm',
     aspectRatio: 35 / 45,
     headHeightPercentage: [70, 80],
-    allowedBackgrounds: ['white', 'off-white', 'light grey']
+    allowedBackgrounds: ['light grey', 'light blue'],
   },
   {
-    name: 'Brazil',
-    dimensions: '70x50 mm',
-    aspectRatio: 50 / 70,
+    name: 'United Kingdom',
+    dimensions: '35x45 mm',
+    aspectRatio: 35 / 45,
     headHeightPercentage: [70, 80],
-    allowedBackgrounds: ['white']
-  }
+    allowedBackgrounds: ['cream', 'light grey'],
+  },
+  {
+    name: 'Canada',
+    dimensions: '50x70 mm',
+    aspectRatio: 50 / 70,
+    headHeightPercentage: [44, 51], // 31-36mm head height on 70mm photo
+    allowedBackgrounds: ['white', 'light-coloured'],
+  },
+  {
+    name: 'China',
+    dimensions: '33x48 mm',
+    aspectRatio: 33 / 48,
+    headHeightPercentage: [58, 75], // 28-33mm on 48mm photo
+    allowedBackgrounds: ['white'],
+  },
 ];
 
 export const FORMAL_ATTIRE: Option[] = [
-  { label: 'Dark Suit, White Shirt, Tie', value: 'a dark business suit with a white collared shirt and a tie' },
-  { label: 'Dark Suit, Blouse', value: 'a dark business suit with a professional blouse' },
-  { label: 'Collared Shirt and Tie', value: 'a collared shirt and a tie' },
-  { label: 'Professional Blouse', value: 'a professional, high-collared blouse' },
-  { label: 'No Change', value: 'no change to attire' },
+  { value: 'a dark suit with a white shirt and a tie', label: 'Dark Suit & Tie' },
+  { value: 'a professional black blazer', label: 'Black Blazer' },
+  { value: 'a simple collared shirt', label: 'Collared Shirt' },
+  { value: 'no change to attire', label: 'No Change' },
 ];
 
-export const PORTRAIT_ATTIRE: WardrobeCollection = {
-  man: [
-    { label: 'Leather Jacket', value: 'a stylish black leather jacket over a grey t-shirt' },
-    { label: 'Knit Sweater', value: 'a cozy, warm knitted turtleneck sweater' },
-    { label: 'Denim Jacket', value: 'a classic casual blue denim jacket' },
-    { label: 'Business Blazer', value: 'a smart business blazer with an open-collar shirt' },
-    { label: 'Polo Shirt', value: 'a crisp, well-fitting polo shirt' },
-  ],
-  woman: [
-    { label: 'Silk Blouse', value: 'an elegant and professional silk blouse' },
-    { label: 'Turtleneck Sweater', value: 'a chic and comfortable turtleneck sweater' },
-    { label: 'Business Blazer', value: 'a modern, professional business blazer over a simple top' },
-    { label: 'Sundress', value: 'a casual and bright floral sundress' },
-    { label: 'Leather Jacket', value: 'a fashionable black leather jacket' },
-  ],
-  boy: [
-    { label: 'Hoodie & T-Shirt', value: 'a cool hoodie over a graphic t-shirt' },
-    { label: 'Polo Shirt', value: 'a smart polo shirt' },
-    { label: 'Sweater', value: 'a comfortable crew-neck sweater' },
-    { label: 'Jacket', value: 'a stylish lightweight jacket' },
-    { label: 'Collared Shirt', value: 'a button-up collared shirt' },
-  ],
-  girl: [
-    { label: 'Floral Dress', value: 'a cute floral pattern dress' },
-    { label: 'Denim Jacket', value: 'a stylish denim jacket over a plain t-shirt' },
-    { label: 'Sweater', value: 'a cozy knitted sweater' },
-    { label: 'Hoodie', value: 'a comfortable and colorful hoodie' },
-    { label: 'Blouse', value: 'a pretty blouse with simple embroidery' },
-  ],
-};
-
-
-export const PORTRAIT_BACKGROUNDS: Option[] = [
-  { label: 'Modern Office', value: 'a bright, modern office with blurred background' },
-  { label: 'Outdoor Cityscape', value: 'an outdoor urban cityscape with soft, natural light' },
-  { label: 'Bookshelf Wall', value: 'a wall lined with bookshelves, giving a scholarly feel' },
-  { label: 'Neutral Gray Wall', value: 'a plain, textured neutral gray wall' },
-  { label: 'Nature Scene', value: 'a serene nature scene with soft, diffused light' },
-];
-
-export const PORTRAIT_POSES: Option[] = [
-  { label: 'Professional Standard', value: 'standard professional headshot pose' },
-  { label: 'Slight Head Tilt', value: 'a slight, engaging head tilt' },
-  { label: 'Leaning Forward', value: 'subtly leaning forward, looking confident' },
-  { label: 'Shoulders Angled', value: 'shoulders angled slightly away from the camera' },
-];
-
-export const PORTRAIT_EXPRESSIONS: Option[] = [
-  { label: 'Friendly Smile', value: 'a warm and friendly smile' },
-  { label: 'Confident Look', value: 'a confident, serious expression' },
-  { label: 'Approachable', value: 'a gentle, approachable expression' },
-  { label: 'Thoughtful', value: 'a thoughtful and engaged expression' },
-];
-
-export const PORTRAIT_STYLES: Option[] = [
-  { label: 'Standard Color', value: 'a standard, vibrant color style' },
-  { label: 'Black and White', value: 'a classic, high-contrast black and white filter' },
-  { label: 'Warm Tones', value: 'a filter that adds warm, inviting tones' },
-  { label: 'Cool Tones', value: 'a filter that adds cool, professional tones' },
-  { label: 'Cinematic', value: 'a dramatic, cinematic style with enhanced contrast and color grading' },
+export const PORTRAIT_STYLES: PortraitStyle[] = [
+    {
+        name: 'Corporate Headshot',
+        prompt: 'Generate a professional corporate headshot. The person should be wearing business attire against a blurred office background. The lighting should be soft and flattering, creating a confident and approachable look. High-resolution, photorealistic.',
+        thumbnail: 'https://storage.googleapis.com/gemini-ui-params/demo-assets/thumbnails/corporate.jpg'
+    },
+    {
+        name: 'Cinematic',
+        prompt: 'Create a cinematic-style portrait with dramatic lighting (Rembrandt or split lighting). The background should be dark and moody. The person\\\'s expression should be thoughtful and intense. Emphasize texture and detail. High-resolution, photorealistic.',
+        thumbnail: 'https://storage.googleapis.com/gemini-ui-params/demo-assets/thumbnails/cinematic.jpg'
+    },
+    {
+        name: 'Vintage Film',
+        prompt: 'Generate a portrait that looks like it was shot on vintage film (e.g., Kodachrome or Polaroid). Add subtle film grain, warm tones, and soft focus. The background should be a retro-style setting. The person should have a nostalgic expression. High-resolution, photorealistic.',
+        thumbnail: 'https://storage.googleapis.com/gemini-ui-params/demo-assets/thumbnails/vintage.jpg'
+    },
+    {
+        name: 'Fantasy Art',
+        prompt: 'Transform the person into a fantasy character (e.g., an elf or a mage). Add fantastical elements like glowing magical effects, intricate fantasy armor or robes, and an enchanted forest or castle background. The style should be epic and illustrative. High-resolution, painterly.',
+        thumbnail: 'https://storage.googleapis.com/gemini-ui-params/demo-assets/thumbnails/fantasy.jpg'
+    },
+    {
+        name: 'Minimalist B&W',
+        prompt: 'Create a powerful black and white portrait. Use high contrast lighting to sculpt the face. The background should be a solid dark grey. The focus should be entirely on the person\\\'s expression and form. Timeless and classic. High-resolution, photorealistic.',
+        thumbnail: 'https://storage.googleapis.com/gemini-ui-params/demo-assets/thumbnails/bw.jpg'
+    },
+    {
+        name: 'Futuristic Sci-Fi',
+        prompt: 'Generate a futuristic, sci-fi themed portrait. The person should be wearing sleek, modern clothing or cybernetic enhancements. The background should be a neon-lit cityscape or a starship interior. Use cool, blue and purple tones. High-resolution, photorealistic.',
+        thumbnail: 'https://storage.googleapis.com/gemini-ui-params/demo-assets/thumbnails/scifi.jpg'
+    }
 ];

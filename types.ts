@@ -1,16 +1,17 @@
+
 export type FeatureMode = 'passport' | 'portrait';
+
+export interface Option {
+  value: string;
+  label: string;
+}
 
 export interface PassportCountry {
   name: string;
   dimensions: string;
-  aspectRatio: number; // width / height
-  headHeightPercentage: [number, number]; // [min, max]
+  aspectRatio: number;
+  headHeightPercentage: [number, number];
   allowedBackgrounds: string[];
-}
-
-export interface Option {
-  label: string;
-  value: string;
 }
 
 export interface ValidationResult {
@@ -18,13 +19,8 @@ export interface ValidationResult {
   feedback: string;
 }
 
-// Types for the new AI Wardrobe feature
-export interface AttireOption extends Option {
-  // Can be extended with image URLs for thumbnails in the future
+export interface PortraitStyle {
+  name: string;
+  prompt: string;
+  thumbnail: string;
 }
-
-export type WardrobeCategory = 'man' | 'woman' | 'boy' | 'girl';
-
-export type WardrobeCollection = {
-  [key in WardrobeCategory]: AttireOption[];
-};

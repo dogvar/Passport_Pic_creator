@@ -1,31 +1,33 @@
 
-import React, { useState, useCallback } from 'react';
-import { FeatureMode } from './types';
+import React, { useState } from 'react';
 import Header from './components/Header';
 import Toggle from './components/Toggle';
 import PassportPhotoConverter from './features/passport/PassportPhotoConverter';
 import PortraitGenerator from './features/portrait/PortraitGenerator';
 import PrivacyNotice from './components/PrivacyNotice';
+import { FeatureMode } from './types';
 
 const App: React.FC = () => {
   const [mode, setMode] = useState<FeatureMode>('passport');
 
-  const handleModeChange = useCallback((newMode: FeatureMode) => {
-    setMode(newMode);
-  }, []);
-
   return (
-    <div className="min-h-screen bg-gray-900 text-white font-sans flex flex-col items-center p-4 sm:p-6 lg:p-8">
-      <div className="w-full max-w-4xl mx-auto">
-        <Header />
-        <main className="mt-8">
-          <Toggle currentMode={mode} onModeChange={handleModeChange} />
-          <div className="mt-6 bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl p-6 sm:p-8 min-h-[600px]">
-            {mode === 'passport' ? <PassportPhotoConverter /> : <PortraitGenerator />}
+    <div className="bg-gray-900 text-white min-h-screen font-sans">
+      <main className="container mx-auto px-4 py-8 sm:py-12">
+        <div className="max-w-3xl mx-auto flex flex-col items-center gap-8">
+          <Header />
+          <Toggle currentMode={mode} onModeChange={setMode} />
+          
+          <div className="w-full bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-700">
+            {mode === 'passport' ? (
+              <PassportPhotoConverter />
+            ) : (
+              <PortraitGenerator />
+            )}
           </div>
-        </main>
-        <PrivacyNotice />
-      </div>
+
+          <PrivacyNotice />
+        </div>
+      </main>
     </div>
   );
 };
