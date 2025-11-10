@@ -54,6 +54,7 @@ const PortraitGenerator: React.FC = () => {
     setError(null);
 
     const prompt = `Using the user's photo, create a professional portrait with a standard portrait aspect ratio (e.g., 4:5 or 3:4), making it larger and more suitable for a profile picture than a square passport photo.
+- **Lighting**: First, correct any uneven lighting or harsh shadows from the original photo to create a flattering and professional look.
 - Background: Replace the background with a realistic scene of ${background}.
 - Pose: Subtly adjust the person's pose to be a ${pose}.
 - Expression: Refine their facial expression to be a ${expression}.

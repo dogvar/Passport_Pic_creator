@@ -58,7 +58,7 @@ const PassportPhotoConverter: React.FC = () => {
     1. A single person is in the frame.
     2. The person is facing forward, looking at the camera.
     3. The face is clearly visible and not obscured by hair, hands, or objects.
-    4. The lighting on the face is relatively even, without harsh shadows.
+    4. The face is generally well-lit. It is OKAY to have some soft shadows, but reject the image if the shadows are very dark and obscure key facial features (like an eye or a large part of the cheek). The AI will attempt to correct minor lighting issues.
     If it fails, provide a concise, user-friendly reason in the feedback.`;
     
     const result: ValidationResult = await validateImage(base64Image, validationPrompt);
@@ -79,11 +79,12 @@ const PassportPhotoConverter: React.FC = () => {
     setError(null);
 
     const prompt = `Critically generate a compliant passport photo for ${selectedCountry.name} based on the user's photo, following these rules strictly:
-1.  **Cropping and Aspect Ratio**: Crop the image to a precise aspect ratio of ${selectedCountry.aspectRatio.toFixed(4)} (width/height). The final image must be high resolution and sharp.
-2.  **Head Position**: The person's head, measured from the bottom of the chin to the top of the crown, MUST occupy between ${selectedCountry.headHeightPercentage[0]}% and ${selectedCountry.headHeightPercentage[1]}% of the image's total height. The head must be centered horizontally.
-3.  **Background**: Completely replace the original background with a solid, uniform, and plain ${backgroundColor} color. There must be no shadows or patterns in the background.
-4.  **Attire**: ${attire !== 'no change to attire' ? `If the user is not wearing formal attire, realistically change their clothing to: ${attire}.` : 'The user\'s attire should remain unchanged.'}
-5.  **Quality Checks**: The person must be facing forward with a neutral expression. Ensure the final image is clear, well-lit, and has no shadows on the face or background.`;
+1.  **Lighting Correction**: First, correct any uneven lighting and mild shadows on the person's face to ensure the final result is evenly and brightly lit, as required for official documents.
+2.  **Cropping and Aspect Ratio**: Crop the image to a precise aspect ratio of ${selectedCountry.aspectRatio.toFixed(4)} (width/height). The final image must be high resolution and sharp.
+3.  **Head Position**: The person's head, measured from the bottom of the chin to the top of the crown, MUST occupy between ${selectedCountry.headHeightPercentage[0]}% and ${selectedCountry.headHeightPercentage[1]}% of the image's total height. The head must be centered horizontally.
+4.  **Background**: Completely replace the original background with a solid, uniform, and plain ${backgroundColor} color. There must be no shadows or patterns in the background.
+5.  **Attire**: ${attire !== 'no change to attire' ? `If the user is not wearing formal attire, realistically change their clothing to: ${attire}.` : 'The user\'s attire should remain unchanged.'}
+6.  **Quality Checks**: The person must be facing forward with a neutral expression. The final image must be clear and sharp.`;
     
     try {
       const generated = await generateImage(originalImage, prompt);
