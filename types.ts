@@ -1,4 +1,3 @@
-
 export type FeatureMode = 'passport' | 'portrait';
 
 export interface Option {
@@ -19,8 +18,16 @@ export interface ValidationResult {
   feedback: string;
 }
 
-export interface PortraitStyle {
+export interface AttireOption {
   name: string;
   prompt: string;
-  thumbnail: string;
+}
+
+export interface WardrobeCategory {
+  upper: AttireOption[];
+  lower: AttireOption[];
+}
+
+export interface WardrobeCollection {
+  [key: string]: WardrobeCategory;
 }

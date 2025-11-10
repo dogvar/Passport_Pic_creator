@@ -1,13 +1,13 @@
-
 import React, { useState, useCallback, useMemo } from 'react';
 import ImageUploader from '../../components/ImageUploader';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import ResultDisplay from '../../components/ResultDisplay';
 import OptionSelector from '../../components/OptionSelector';
 import ComplianceChecklist from '../../components/ComplianceChecklist';
-import { generateImage, validateImage } from '../../services/geminiService';
-import { PASSPORT_COUNTRIES, FORMAL_ATTIRE } from '../../constants';
-import { ValidationResult, PassportCountry } from '../../types';
+import { generateImage } from '../../services/geminiService';
+import { validateImage } from '../../services/geminiService';
+import { PASSPORT_COUNTRIES, PORTRAIT_ATTIRE } from '../../constants';
+import { ValidationResult, PassportCountry, Option } from '../../types';
 
 type Stage = 'upload' | 'validating' | 'processing' | 'result';
 
@@ -19,58 +19,81 @@ const PASSPORT_GUIDELINES = [
   "We'll replace the background and adjust lighting for you."
 ];
 
+// Fix: Rewrote FORMAL_ATTIRE_OPTIONS to be type-safe and resolve the union type error.
+const FORMAL_ATTIRE_OPTIONS: Option[] = [
+    { value: PORTRAIT_ATTIRE["Man"].upper[1].prompt, label: PORTRAIT_ATTIRE["Man"].upper[1].name }, // Dark Suit
+    { value: 'a professional black blazer', label: 'Black Blazer' },
+    { value: 'a simple collared shirt', label: 'Collared Shirt' },
+    { value: 'no change to attire', label: 'No Change' },
+];
+
+
 const PassportPhotoConverter: React.FC = () => {
   const [stage, setStage] = useState<Stage>('upload');
   const [originalImage, setOriginalImage] = useState<string | null>(null);
-  const [resultImage, setResultImage] = useState<string | null>(null);
+  const [resultImages, setResultImages] = useState<string[]>([]);
   const [fileName, setFileName] = useState('passport-photo.png');
   
   const [countryName, setCountryName] = useState(PASSPORT_COUNTRIES[0].name);
-  const [attire, setAttire] = useState(FORMAL_ATTIRE[FORMAL_ATTIRE.length - 1].value); // Default to 'No Change'
+  const [attire, setAttire] = useState(FORMAL_ATTIRE_OPTIONS[FORMAL_ATTIRE_OPTIONS.length - 1].value); // Default to 'No Change'
+  const [background, setBackground] = useState(PASSPORT_COUNTRIES[0].allowedBackgrounds[0]);
 
   const [error, setError] = useState<string | null>(null);
 
   const selectedCountry = useMemo(() => {
-    return PASSPORT_COUNTRIES.find(c => c.name === countryName) || PASSPORT_COUNTRIES[0];
-  }, [countryName]);
+    const country = PASSPORT_COUNTRIES.find(c => c.name === countryName);
+    if (country && !country.allowedBackgrounds.includes(background)) {
+        setBackground(country.allowedBackgrounds[0]);
+    }
+    return country || PASSPORT_COUNTRIES[0];
+  }, [countryName, background]);
 
-  const handleGenerate = useCallback(async (base64Image: string, country: PassportCountry, selectedAttire: string) => {
+  const handleGenerate = useCallback(async (base64Image: string, country: PassportCountry, selectedAttire: string, selectedBg: string) => {
     if (!base64Image) return;
 
     setStage('processing');
     setError(null);
+    
+    const headHeightTarget = (country.headHeightPercentage[0] + country.headHeightPercentage[1]) / 2;
 
-    const prompt = `
-**PRIMARY DIRECTIVE: DO NOT CHANGE THE FACE, HAIR, OR HEAD SHAPE.**
+    const createPrompt = (variation: number) => `
+**PRIMARY DIRECTIVE: DO NOT CHANGE THE FACE, HAIR, OR HEAD SHAPE. This is the most important rule.**
 
-You are an expert passport photo generator. Your absolute priority is to preserve the person's identity perfectly. You are explicitly forbidden from altering the person's facial features, hair, skin tone, or head shape. The result must be the same person. Any change to the person's face is a complete failure.
+You are a technical expert passport photo generator. Your absolute priority is to preserve the person's identity perfectly. You are explicitly forbidden from altering the person's facial features, hair, skin tone, or head shape. The result must be the same person.
 
 **Task**: Convert the user's photo into an official passport photo that meets the requirements for **${country.name}**.
 
-Follow these specifications precisely:
+Follow these technical specifications with extreme precision:
 
-1.  **Identity Lock**: Before any creative work, lock in the subject's exact facial likeness, hair, and head shape from the original photo. This is your foundational constraint.
+1.  **Identity Lock**: Before any other step, perfectly lock in the subject's exact facial likeness, hair, and head shape from the original photo. This is a non-negotiable constraint.
 
-2.  **Background**: Replace the original background with a solid, uniform, and featureless **${country.allowedBackgrounds[0]}** color.
+2.  **Background**: Replace the original background with a solid, perfectly uniform, and featureless **${selectedBg}** color.
 
-3.  **Head Position & Size**: The head must be centered. The head height (from chin to top of hair) must be between **${country.headHeightPercentage[0]}% and ${country.headHeightPercentage[1]}%** of the total photo height.
+3.  **Attire**: ${selectedAttire !== 'no change to attire' ? `Change the person's clothing to '${selectedAttire}'. The new clothing must look photorealistic, professional, simple, and not obscure their neck.` : 'Keep the original clothing.'}
 
-4.  **Attire**: ${selectedAttire !== 'no change to attire' ? `Change the person's clothing to '${selectedAttire}'. The new clothing must be professional, simple, and not obscure their neck.` : 'Keep the original clothing, but ensure it is simple and doesn\\\'t resemble a uniform. Remove any distracting jewelry.'}
+4.  **Lighting**: Correct any uneven lighting and remove shadows on the face and background to be flattering but realistic. Do not alter skin tone.
 
-5.  **Expression & Pose**: Adjust the pose so the person is facing directly forward. Their expression must be neutral with both eyes open and mouth closed.
+5.  **Final Composition**:
+    -   **CRITICAL**: The output image MUST have a precise aspect ratio of **${country.aspectRatio.toFixed(4)}** (width/height). Generate the image on a canvas of this exact proportion.
+    -   **CRITICAL**: The final image MUST NOT contain any padding, borders, or letterboxing. The subject and background must fill the entire canvas, edge to edge.
+    -   The person must be centered.
+    -   The head height (from chin to top of hair) must be approximately **${headHeightTarget.toFixed(0)}%** of the total photo height.
+    -   The person must be facing directly forward with a neutral expression.
 
-6.  **Lighting & Quality**: Correct any uneven lighting and remove shadows on the face and background. The final photo must be clear, in focus, and have natural, unaltered skin tones. Do not apply any artistic filters.
-
-7.  **Final Output**: The final image must have an aspect ratio of **${country.aspectRatio.toFixed(3)}** (width/height). It must be a high-resolution, photorealistic image suitable for official use.
+6.  **Verification**: Before finalizing, verify that the face is 100% identical to the original and that all geometric constraints (aspect ratio, head height, no padding) have been met. This is a technical check for precision. For this variation (${variation}), interpret the lighting slightly differently but keep all other constraints identical.
 `;
 
     try {
-      const generated = await generateImage(base64Image, prompt);
-      setResultImage(generated);
+      const generationPromises = [
+          generateImage(base64Image, createPrompt(1)),
+          generateImage(base64Image, createPrompt(2))
+      ];
+      const generated = await Promise.all(generationPromises);
+      setResultImages(generated);
       setStage('result');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
-      setStage('upload'); // Go back to upload on failure
+      setStage('upload'); 
       setOriginalImage(null);
     }
   }, []);
@@ -82,14 +105,13 @@ Follow these specifications precisely:
     setStage('validating');
     setError(null);
 
-    const validationPrompt = `Analyze this photo for its suitability as a base for a passport photo for ${selectedCountry.name}. The photo is valid if a person's face is reasonably clear, visible, and facing forward. It is invalid if it's not a photo of a person, the face is completely obscured, blurry, or at a sharp angle. Return a JSON object with "isValid" (boolean) and "feedback" (string). Provide a simple reason if invalid.`;
+    const validationPrompt = `Analyze this photo for its suitability as a base for a passport photo. The photo is valid if a person's face is reasonably clear, visible, and facing generally forward. The lighting must be good enough to see their features. It is invalid if it's not a photo of a person, the face is completely obscured, blurry, or at a sharp angle. Return a JSON object with "isValid" (boolean) and "feedback" (string). Provide a simple reason if invalid.`;
 
     try {
       const result: ValidationResult = await validateImage(base64Image, validationPrompt);
       
       if (result.isValid) {
-        // Automatically proceed to generate the image
-        handleGenerate(base64Image, selectedCountry, attire);
+        handleGenerate(base64Image, selectedCountry, attire, background);
       } else {
         setError(result.feedback);
         setStage('upload');
@@ -100,20 +122,20 @@ Follow these specifications precisely:
        setStage('upload');
        setOriginalImage(null);
     }
-  }, [selectedCountry, attire, handleGenerate]);
+  }, [selectedCountry, attire, background, handleGenerate]);
   
   const handleReset = useCallback(() => {
     setStage('upload');
     setOriginalImage(null);
-    setResultImage(null);
+    setResultImages([]);
     setError(null);
     setCountryName(PASSPORT_COUNTRIES[0].name);
-    setAttire(FORMAL_ATTIRE[FORMAL_ATTIRE.length - 1].value);
+    setAttire(FORMAL_ATTIRE_OPTIONS[FORMAL_ATTIRE_OPTIONS.length - 1].value);
+    setBackground(PASSPORT_COUNTRIES[0].allowedBackgrounds[0]);
   }, []);
 
   const handleDownload = useCallback((selectedImage: string) => {
     if (!selectedImage) return;
-    // Assuming JPEG for passport photos as it's common
     const mimeType = 'image/jpeg';
     const link = document.createElement('a');
     link.href = `data:${mimeType};base64,${selectedImage}`;
@@ -138,8 +160,16 @@ Follow these specifications precisely:
                   labelKey="name"
                 />
                 <OptionSelector
+                  label="Background Color"
+                  options={selectedCountry.allowedBackgrounds.map(bg => ({value: bg, label: bg.charAt(0).toUpperCase() + bg.slice(1)}))}
+                  value={background}
+                  onChange={setBackground}
+                />
+            </div>
+             <div className="w-full max-w-lg">
+                 <OptionSelector
                   label="Change Attire (Optional)"
-                  options={FORMAL_ATTIRE}
+                  options={FORMAL_ATTIRE_OPTIONS}
                   value={attire}
                   onChange={setAttire}
                 />
@@ -160,7 +190,7 @@ Follow these specifications precisely:
       case 'processing':
         return <LoadingSpinner message={`Generating ${selectedCountry.name} passport photo...`} />;
       case 'result':
-        return resultImage ? <ResultDisplay images={[resultImage]} onDownload={handleDownload} onReset={handleReset} fileName={fileName} /> : null;
+        return resultImages.length > 0 ? <ResultDisplay images={resultImages} onDownload={handleDownload} onReset={handleReset} fileName={fileName} /> : null;
     }
   };
 

@@ -1,34 +1,19 @@
-
-import { GoogleGenAI, GenerateContentResponse, Modality, Type } from "@google/genai";
+import { GoogleGenAI, GenerateContentResponse, Modality, Type, Part } from "@google/genai";
 import { ValidationResult } from "../types";
 
-// FIX: Correctly instantiate GoogleGenAI with the API key from environment variables.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const imageModel = 'gemini-2.5-flash-image';
 const textModel = 'gemini-2.5-flash';
 
 /**
- * Generates an image based on a prompt and an input image.
- * @param base64Image The base64 encoded input image.
- * @param prompt The text prompt for image generation.
- * @returns A promise that resolves to the base64 encoded generated image.
+ * The core image generation function that takes an array of parts.
  */
-export const generateImage = async (base64Image: string, prompt: string): Promise<string> => {
+const generateImageFromParts = async (parts: Part[]): Promise<string> => {
     try {
         const response: GenerateContentResponse = await ai.models.generateContent({
             model: imageModel,
-            contents: {
-                parts: [
-                    {
-                        inlineData: {
-                            data: base64Image,
-                            mimeType: 'image/jpeg', // Assuming JPEG, could be dynamic
-                        },
-                    },
-                    { text: prompt },
-                ],
-            },
+            contents: { parts },
             config: {
                 responseModalities: [Modality.IMAGE],
             },
@@ -47,15 +32,27 @@ export const generateImage = async (base64Image: string, prompt: string): Promis
 };
 
 /**
- * Generates two images for portrait mode.
- * @param base64Image The base64 encoded input image.
- * @param prompt The text prompt for image generation.
- * @returns A promise that resolves to an array of two base64 encoded generated images.
+ * Generates a single image from a base image and a text prompt.
+ */
+export const generateImage = async (base64Image: string, prompt: string): Promise<string> => {
+    const parts: Part[] = [
+        { inlineData: { data: base64Image, mimeType: 'image/jpeg' } },
+        { text: prompt },
+    ];
+    return generateImageFromParts(parts);
+};
+
+/**
+ * Generates two images in parallel from a base image and a text prompt.
  */
 export const generateTwoImages = async (base64Image: string, prompt: string): Promise<string[]> => {
+    const parts: Part[] = [
+        { inlineData: { data: base64Image, mimeType: 'image/jpeg' } },
+        { text: prompt },
+    ];
     const generationPromises = [
-        generateImage(base64Image, prompt),
-        generateImage(base64Image, prompt)
+        generateImageFromParts(parts),
+        generateImageFromParts(parts) // Calling with the same parts is fine; model has inherent variability.
     ];
     try {
         const results = await Promise.all(generationPromises);
@@ -68,10 +65,25 @@ export const generateTwoImages = async (base64Image: string, prompt: string): Pr
 
 
 /**
+ * Generates two images in parallel from multiple image/text parts.
+ */
+export const generateTwoImagesFromParts = async (parts: Part[]): Promise<string[]> => {
+     const generationPromises = [
+        generateImageFromParts(parts),
+        generateImageFromParts(parts)
+    ];
+    try {
+        const results = await Promise.all(generationPromises);
+        return results;
+    } catch (error) {
+        console.error("Error generating portrait images from parts:", error);
+        throw new Error("Failed to generate portrait images. One or more generations may have failed.");
+    }
+}
+
+
+/**
  * Validates an image based on a prompt.
- * @param base64Image The base64 encoded input image.
- * @param prompt The validation prompt.
- * @returns A promise that resolves to a ValidationResult object.
  */
 export const validateImage = async (base64Image: string, prompt: string): Promise<ValidationResult> => {
     try {

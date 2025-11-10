@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import Header from './components/Header';
 import Toggle from './components/Toggle';
 import PassportPhotoConverter from './features/passport/PassportPhotoConverter';
 import PortraitGenerator from './features/portrait/PortraitGenerator';
 import PrivacyNotice from './components/PrivacyNotice';
+import LegalDisclaimer from './components/LegalDisclaimer';
 import { FeatureMode } from './types';
 
 const App: React.FC = () => {
@@ -26,6 +26,7 @@ const App: React.FC = () => {
           </div>
 
           <PrivacyNotice />
+          <LegalDisclaimer />
         </div>
       </main>
     </div>
