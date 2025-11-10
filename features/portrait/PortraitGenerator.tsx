@@ -90,16 +90,17 @@ const PortraitGenerator: React.FC = () => {
     setAttire('no change to attire');
   }, []);
 
-  const handleDownload = useCallback(() => {
-    if (!resultImage) return;
-    const mimeType = resultImage.startsWith('/9j/') ? 'image/jpeg' : 'image/png';
+  // FIX: Update handleDownload to accept the selected image string.
+  const handleDownload = useCallback((selectedImage: string) => {
+    if (!selectedImage) return;
+    const mimeType = selectedImage.startsWith('/9j/') ? 'image/jpeg' : 'image/png';
     const link = document.createElement('a');
-    link.href = `data:${mimeType};base64,${resultImage}`;
+    link.href = `data:${mimeType};base64,${selectedImage}`;
     link.download = fileName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }, [resultImage, fileName]);
+  }, [fileName]);
 
   const renderContent = () => {
     switch (stage) {
@@ -145,7 +146,8 @@ const PortraitGenerator: React.FC = () => {
       case 'processing':
         return <LoadingSpinner message="Crafting your professional portrait..." />;
       case 'result':
-        return resultImage ? <ResultDisplay image={resultImage} onDownload={handleDownload} onReset={handleReset} /> : null;
+        // FIX: Pass resultImage as an array to the 'images' prop instead of 'image'.
+        return resultImage ? <ResultDisplay images={[resultImage]} onDownload={handleDownload} onReset={handleReset} /> : null;
     }
   };
 
