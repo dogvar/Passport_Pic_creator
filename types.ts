@@ -1,4 +1,3 @@
-// Fix: Provide full content for types.ts
 export type FeatureMode = 'passport' | 'portrait';
 
 export interface ValidationResult {
@@ -11,15 +10,30 @@ export interface Option {
   value: string;
 }
 
-export interface OptionGroup {
-    label: string;
-    options: Option[];
-}
-
 export interface CountrySpec {
   name: string;
-  photoSizeMM: { width: number; height: number; };
-  headHeightPercentage: { min: number; max: number; };
+  photoSizeMM: {
+    width: number;
+    height: number;
+  };
+  headHeightPercentage: {
+    min: number;
+    max: number;
+  };
   allowedBackgrounds: string[];
   otherRequirements: string[];
+}
+
+export interface WardrobeItem {
+    id: string;
+    name: string;
+    prompt: string;
+    thumbnail: string;
+}
+
+export interface Scene {
+    id: string;
+    name: string;
+    prompt: string;
+    thumbnail: string;
 }

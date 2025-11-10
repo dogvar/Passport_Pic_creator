@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Option } from '../types';
 
@@ -7,8 +8,10 @@ interface OptionSelectorProps {
   options: Option[] | { name: string; value?: string }[];
   value: string;
   onChange: (value: string) => void;
-  valueKey?: 'name' | 'value';
-  labelKey?: 'name' | 'label';
+  // Fix: Changed from a restrictive union type to `string` to allow for more flexible key names. This resolves an error where "prompt" was used as a valueKey.
+  valueKey?: string;
+  // Fix: Changed from a restrictive union type to `string` for consistency and flexibility.
+  labelKey?: string;
 }
 
 const OptionSelector: React.FC<OptionSelectorProps> = ({

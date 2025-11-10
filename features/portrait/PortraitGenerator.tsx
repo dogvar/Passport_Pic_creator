@@ -1,25 +1,27 @@
-// Fix: Provide full content for PortraitGenerator.tsx
 import React, { useState, useCallback } from 'react';
-import { Part } from '@google/genai';
-import { generateTwoImagesFromParts, validateImage } from '../../services/geminiService';
+import { generateTwoImages, validateImage } from '../../services/geminiService';
 import ImageUploader from '../../components/ImageUploader';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import ResultDisplay from '../../components/ResultDisplay';
-import OptionSelector from '../../components/OptionSelector';
+import { PORTRAIT_SCENES, PORTRAIT_WARDROBE } from '../../constants';
 import WardrobeSelector from '../../components/WardrobeSelector';
-import ComplianceChecklist from '../../components/ComplianceChecklist';
-import { 
-    PORTRAIT_ATTIRE, 
-    PORTRAIT_ASPECT_RATIOS,
-    PORTRAIT_PROMPT_BUILDER_OPTIONS
-} from '../../constants';
+import DisclaimerNotice from '../../components/DisclaimerNotice';
+import OptionSelector from '../../components/OptionSelector';
 
 const PORTRAIT_VALIDATION_PROMPT = `
-You are a photo analyzer. Your task is to determine if the uploaded image contains a clearly visible person suitable for a portrait.
-The image is suitable if it shows at least the head and shoulders of one person. The face should be reasonably clear.
-Return your response as a JSON object with two keys: "isValid" (boolean) and "feedback" (string).
-If the image is not suitable, the "feedback" should explain why (e.g., "No person was detected in the image.", "The face is too blurry or obscured.").
-If it is suitable, the feedback should be simple: "The photo is suitable for generating a portrait."`;
+  Analyze the user-provided image to determine if it's suitable as a starting point for a professional portrait.
+  Check for the following potential issues and provide a clear, user-friendly "feedback" message if any are found.
+  The 'isValid' flag should be false if any critical issue is detected.
+
+  Critical Issues (isValid: false):
+  1.  **Face not visible or obstructed**: Is the face heavily shadowed, turned away, covered by hands/hair, or otherwise not clearly visible?
+  2.  **Multiple people**: Are there multiple people in the photo?
+  3.  **Non-human subject**: Is the subject an animal, cartoon, or object?
+  4.  **Very low resolution/blurry**: Is the image extremely blurry or pixelated?
+
+  If the image is good, set 'isValid' to true and provide positive feedback like "This photo is a great starting point!".
+  Your response must be in JSON format.
+`;
 
 const PortraitGenerator: React.FC = () => {
   const [base64Image, setBase64Image] = useState<string | null>(null);
@@ -30,17 +32,8 @@ const PortraitGenerator: React.FC = () => {
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   
-  // Prompt Builder states
-  const [aspectRatio, setAspectRatio] = useState(PORTRAIT_ASPECT_RATIOS[0].value);
-  const [setting, setSetting] = useState(PORTRAIT_PROMPT_BUILDER_OPTIONS[0].options[0].value);
-  const [pose, setPose] = useState(PORTRAIT_PROMPT_BUILDER_OPTIONS[1].options[0].value);
-  const [expression, setExpression] = useState(PORTRAIT_PROMPT_BUILDER_OPTIONS[2].options[0].value);
-  
-  // Wardrobe states
-  const [attireCategory, setAttireCategory] = useState(Object.keys(PORTRAIT_ATTIRE)[0]);
-  const [upperAttire, setUpperAttire] = useState(PORTRAIT_ATTIRE[attireCategory].upper[0].prompt);
-  const [lowerAttire, setLowerAttire] = useState(PORTRAIT_ATTIRE[attireCategory].lower[0].prompt);
-  const [customAttireImage, setCustomAttireImage] = useState<string | null>(null);
+  const [selectedScene, setSelectedScene] = useState<string>(PORTRAIT_SCENES[0].prompt);
+  const [selectedWardrobe, setSelectedWardrobe] = useState<string>(PORTRAIT_WARDROBE[0].id);
 
   const resetState = useCallback(() => {
     setBase64Image(null);
@@ -50,6 +43,8 @@ const PortraitGenerator: React.FC = () => {
     setIsGenerating(false);
     setGenerationError(null);
     setGeneratedImages([]);
+    setSelectedScene(PORTRAIT_SCENES[0].prompt);
+    setSelectedWardrobe(PORTRAIT_WARDROBE[0].id);
   }, []);
 
   const handleImageUpload = useCallback(async (b64Image: string, file: File) => {
@@ -64,61 +59,48 @@ const PortraitGenerator: React.FC = () => {
       const result = await validateImage(b64Image, PORTRAIT_VALIDATION_PROMPT);
       if (!result.isValid) {
         setValidationError(result.feedback);
-        setBase64Image(null);
+        setBase64Image(null); 
+        setOriginalFile(null);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "An unknown validation error occurred.";
       setValidationError(errorMessage);
       setBase64Image(null);
+      setOriginalFile(null);
     } finally {
       setIsValidating(false);
     }
   }, [resetState]);
-
+  
   const handleGenerate = async () => {
     if (!base64Image) return;
 
     setIsGenerating(true);
     setGenerationError(null);
 
-    const parts: Part[] = [
-      { inlineData: { data: base64Image, mimeType: 'image/jpeg' } },
-    ];
+    const wardrobeItem = PORTRAIT_WARDROBE.find(w => w.id === selectedWardrobe);
+    const attirePrompt = wardrobeItem ? wardrobeItem.prompt : 'The person\'s clothing must remain completely unchanged.';
     
-    let attirePrompt = '';
-    if (customAttireImage) {
-      parts.push({ inlineData: { data: customAttireImage, mimeType: 'image/png' }});
-      attirePrompt = 'Dress them in the clothing shown in the second image. The style and fit should be adapted to their body.';
-    } else {
-      let clothingDescriptions = [];
-      if(upperAttire) clothingDescriptions.push(upperAttire);
-      if(lowerAttire) clothingDescriptions.push(lowerAttire);
-      if(clothingDescriptions.length > 0) {
-        attirePrompt = `The person should be ${clothingDescriptions.join(' and ')}.`;
-      }
-    }
+    const fullPrompt = `
+      **Primary Goal: Create a high-quality, professional portrait.**
 
-    let prompt = `
-      PRIMARY DIRECTIVE: DO NOT CHANGE THE FACE. The user's facial features, hair, and head shape must be preserved with 100% accuracy.
+      **Critical Rule: The subject's face, hair, and head shape from the original photo MUST be preserved with 100% accuracy. DO NOT alter the person's identity or facial expression.**
 
-      TASK: Create a photorealistic, high-quality portrait of the person from the first image based on the following creative direction.
-
-      CREATIVE DIRECTION:
-      1.  **Identity Lock**: The subject's face, hair, and head MUST be identical to the source image.
-      2.  **Aspect Ratio**: The final image MUST have an aspect ratio of exactly ${aspectRatio}. Crop the scene, not the person, to fit this ratio.
-      3.  **Scene**: The person should be ${setting}.
-      4.  **Pose & Expression**: Their pose should be ${pose}, ${expression}.
-      5.  **Attire**: ${attirePrompt}
-      6.  **Overall Style**: The final image should look like a professional photograph with cinematic lighting. It must be photorealistic.
+      **Execution Steps:**
+      1.  **Isolate Subject**: Isolate the person's upper body from the original image.
+      2.  **Apply Attire**: ${attirePrompt} The clothing must look photorealistic.
+      3.  **Set Scene**: Place the subject in the following scene: ${selectedScene}. The background must have a natural, artistic blur (bokeh) to keep the focus on the person.
+      4.  **Apply Lighting**: Use professional portrait lighting to create a high-quality, flattering image.
+      5.  **Final Composition:**
+          -   The composition should be a head-and-shoulders or upper-bust portrait.
+          -   The final image must be high-resolution, sharp, and photorealistic, resembling a professional photograph.
     `;
 
-    parts.push({ text: prompt });
-
     try {
-      const images = await generateTwoImagesFromParts(parts);
+      const images = await generateTwoImages(base64Image, fullPrompt);
       setGeneratedImages(images);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unknown generation error occurred.";
+       const errorMessage = error instanceof Error ? error.message : "An unknown generation error occurred.";
       setGenerationError(errorMessage);
     } finally {
       setIsGenerating(false);
@@ -129,22 +111,15 @@ const PortraitGenerator: React.FC = () => {
     const link = document.createElement('a');
     const mimeType = selectedImage.startsWith('/9j/') ? 'image/jpeg' : 'image/png';
     link.href = `data:${mimeType};base64,${selectedImage}`;
-    link.download = `ai_portrait_${Date.now()}.jpg`;
+    link.download = `portrait_${Date.now()}.jpg`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
   
-  const handleAttireCategoryChange = (category: string) => {
-    setAttireCategory(category);
-    setUpperAttire(PORTRAIT_ATTIRE[category].upper[0].prompt);
-    setLowerAttire(PORTRAIT_ATTIRE[category].lower[0].prompt);
-    setCustomAttireImage(null); 
-  };
-
   const renderContent = () => {
     if (isGenerating) {
-        return <LoadingSpinner message="Generating your AI portraits..." />;
+        return <LoadingSpinner message="Generating your portraits..." />;
     }
     if (generatedImages.length > 0) {
         return <ResultDisplay images={generatedImages} onDownload={handleDownload} onReset={resetState} />;
@@ -155,43 +130,32 @@ const PortraitGenerator: React.FC = () => {
     if (base64Image) {
       return (
         <div className="w-full flex flex-col items-center gap-6 animate-fade-in">
-             <img src={`data:image/jpeg;base64,${base64Image}`} alt="Uploaded preview" className="w-40 h-40 rounded-lg object-cover shadow-lg" />
-            
-             {generationError && (
+            <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
+                <img src={`data:image/jpeg;base64,${base64Image}`} alt="Uploaded preview" className="w-32 h-32 rounded-lg object-cover" />
+                <div className="flex-1">
+                    <p className="text-green-400 font-semibold mb-2 text-center sm:text-left">✓ Photo is ready!</p>
+                    <p className="text-sm text-gray-400 text-center sm:text-left">Now, choose a style and wardrobe for your new portrait.</p>
+                </div>
+            </div>
+            {generationError && (
                 <div className="w-full p-3 bg-red-900/50 border border-red-500 rounded-lg text-center text-red-300 text-sm">
                     <p>{generationError}</p>
                 </div>
             )}
             
-            {/* Prompt Builder */}
-             <div className="w-full p-4 bg-gray-700/50 border border-gray-600 rounded-lg space-y-4">
-                <h3 className="text-lg font-semibold text-white mb-2 text-center">Portrait Prompt Builder</h3>
-                <OptionSelector 
-                    label="Aspect Ratio"
-                    options={PORTRAIT_ASPECT_RATIOS}
-                    value={aspectRatio}
-                    onChange={setAspectRatio}
-                />
-                 {PORTRAIT_PROMPT_BUILDER_OPTIONS.map(group => (
-                     <OptionSelector 
-                        key={group.label}
-                        label={group.label}
-                        options={group.options}
-                        value={group.label === 'Setting' ? setting : group.label === 'Pose / Action' ? pose : expression}
-                        onChange={group.label === 'Setting' ? setSetting : group.label === 'Pose / Action' ? setPose : setExpression}
-                    />
-                 ))}
-            </div>
-            
-            {/* Wardrobe Selection */}
+            <OptionSelector
+                label="Select a Scene / Background"
+                options={PORTRAIT_SCENES}
+                value={selectedScene}
+                onChange={setSelectedScene}
+                valueKey="prompt"
+                labelKey="name"
+            />
+
             <WardrobeSelector
-              category={attireCategory}
-              onCategoryChange={handleAttireCategoryChange}
-              upperAttire={upperAttire}
-              onUpperAttireChange={setUpperAttire}
-              lowerAttire={lowerAttire}
-              onLowerAttireChange={setLowerAttire}
-              onCustomAttireUpload={setCustomAttireImage}
+                options={PORTRAIT_WARDROBE}
+                value={selectedWardrobe}
+                onChange={setSelectedWardrobe}
             />
 
             <button
@@ -209,18 +173,11 @@ const PortraitGenerator: React.FC = () => {
     
     return (
         <>
-        <ComplianceChecklist 
-            title="Portrait Photo Tips"
-            items={[
-                "Use a clear, well-lit photo of one person.",
-                "Head and shoulders should be visible.",
-                "A simple background works best.",
-                "Avoid blurry photos or photos with harsh shadows."
-            ]}
-        />
+        <DisclaimerNotice />
+        <div className="mb-6" />
         <ImageUploader 
             onImageUpload={handleImageUpload}
-            message="Upload a portrait to get started"
+            message="Upload a clear, forward-facing photo"
             error={validationError}
         />
         </>
@@ -231,7 +188,7 @@ const PortraitGenerator: React.FC = () => {
     <div className="flex flex-col items-center gap-4">
       <h2 className="text-3xl font-bold text-center">AI Portrait Generator</h2>
       <p className="text-gray-400 mb-4 text-center">
-        Create professional or creative portraits. Use our prompt builder to design your perfect shot!
+        Create professional-quality headshots and portraits in seconds.
       </p>
       {renderContent()}
     </div>

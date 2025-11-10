@@ -1,4 +1,3 @@
-// Fix: Provide full content for PassportPhotoConverter.tsx
 import React, { useState, useCallback } from 'react';
 import { generateTwoImages, validateImage } from '../../services/geminiService';
 import ImageUploader from '../../components/ImageUploader';
@@ -71,45 +70,27 @@ const PassportPhotoConverter: React.FC = () => {
     const backgroundPrompt = PASSPORT_BG_PROMPTS[selectedBackground];
     
     const attirePrompt = selectedAttire !== 'no change' 
-        ? `The person should be dressed in ${selectedAttire}. The new attire must look realistic and appropriate for a passport photo.`
-        : 'The person\'s clothing must remain completely unchanged from the original photo.';
+        ? `Apply the following attire to the person: ${selectedAttire}. The clothing must look realistic and appropriate for an official photograph.`
+        : 'Keep the person\'s original clothing completely unchanged.';
 
     const fullPrompt = `
-      PRIMARY DIRECTIVE: DO NOT CHANGE THE FACE. The user's facial features, hair, and head shape must be preserved with 100% accuracy. This is a technical conversion, not an artistic interpretation.
+      **Primary Goal: Create a regulation-compliant passport photo.**
 
-      TASK: Convert the user's photo into a regulation-compliant passport photo according to the following strict technical specifications.
+      **Critical Rule: The subject's face, hair, and head shape from the original photo MUST be preserved with 100% accuracy. DO NOT alter the person's identity.**
 
-      SPECIFICATIONS:
-      1.  **Image Geometry**:
-          -   Final Aspect Ratio: ${aspectRatio}. The final image MUST conform to this exact ratio with no distortion.
-          -   Composition: The image must be a close-up of the head and top of the shoulders.
-          -   Head Size: The height of the head (from the bottom of the chin to the top of the hair) MUST occupy between ${headHeightPercentage.min}% and ${headHeightPercentage.max}% of the total image height.
-          -   Centering: The head must be centered horizontally within the frame.
-          -   No Padding: The generated image MUST fill the entire canvas of the specified aspect ratio. There must be absolutely no borders, letterboxing, or padding of any kind.
-
-      2.  **Subject & Attire**:
-          -   Identity Lock: The subject's face, hair, and head MUST be identical to the source image.
-          -   Attire: ${attirePrompt}
-
-      3.  **Background**:
-          -   Replace the original background completely with ${backgroundPrompt}. The background must be featureless and uniform.
-
-      4.  **Lighting & Quality**:
-          -   Correct any uneven lighting on the subject's face to be uniform and clear.
-          -   Remove any shadows on the face or in the background.
-          -   The final image must be high-resolution, sharp, and in focus.
-
-      5.  **Other Official Requirements**:
-          -   ${otherRequirements.join('\n          -   ')}
-
-      FINAL VERIFICATION CHECKLIST (Internal):
-      Before outputting the image, verify it meets these non-negotiable criteria:
-      - Is the user's face identical to the source image? -> Must be YES.
-      - Does the image aspect ratio exactly match ${aspectRatio}? -> Must be YES.
-      - Is the head height between ${headHeightPercentage.min}% and ${headHeightPercentage.max}% of the total height? -> Must be YES.
-      - Does the image fill the entire frame with no padding? -> Must be YES.
-
-      Generate two distinct options that both strictly adhere to all of the above specifications.
+      **Execution Steps:**
+      1.  **Isolate Subject**: Isolate the person's head and upper shoulders from the original image.
+      2.  **Correct Lighting**: Apply even, professional lighting to the subject's face. Remove all shadows from the face.
+      3.  **Apply Attire**: ${attirePrompt}
+      4.  **Set Background**: Place the subject on ${backgroundPrompt}. The background must be completely uniform with no shadows or textures.
+      5.  **Final Composition (Strict Rules):**
+          -   The final image's aspect ratio MUST BE exactly **${aspectRatio}**.
+          -   The final image must be a close-up of the head and the very top of the shoulders.
+          -   The head height (chin to top of hair) MUST be between **${headHeightPercentage.min}% and ${headHeightPercentage.max}%** of the total image height.
+          -   The head MUST be centered horizontally.
+          -   The final image MUST fill the entire frame. **There must be no padding, borders, or empty space.**
+          -   The image must be high-resolution, sharp, and photorealistic.
+          -   Adhere to these additional rules: ${otherRequirements.join(', ')}.
     `;
 
     try {

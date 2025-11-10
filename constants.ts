@@ -1,212 +1,113 @@
-// Fix: Provide full content for constants.ts
-import { CountrySpec, OptionGroup } from "./types";
+import { CountrySpec, Option, Scene, WardrobeItem } from './types';
 
-export const PASSPORT_BG_PROMPTS = {
-    'white': 'a professional, plain, flat, and even solid white background',
-    'off-white': 'a professional, plain, flat, and even solid off-white background',
-    'light grey': 'a professional, plain, flat, and even solid light grey background',
-    'cream': 'a professional, plain, flat, and even solid cream background',
-    'light blue': 'a professional, plain, flat, and even solid light blue background',
-};
-
-// Fix: Added missing PASSPORT_VALIDATION_PROMPT constant.
-export const PASSPORT_VALIDATION_PROMPT = `
-You are a strict passport photo compliance officer. Your task is to analyze the uploaded image and determine if it's a suitable starting point for a passport photo. It doesn't need to be perfect, but it must meet some basic criteria.
-
-The image is suitable if it meets ALL the following criteria:
-1.  **Single Subject**: Contains only one person.
-2.  **Clear View**: The person's face is clearly visible, facing forward, and not obscured by hair, hands, or other objects.
-3.  **Eyes Open**: Both eyes are open.
-4.  **No Obstructions**: The person is not wearing glasses, sunglasses, hats, headphones, or any head coverings (unless for religious or medical reasons, but for this check, assume none are allowed).
-5.  **Lighting**: The face is generally well-lit without harsh shadows.
-6.  **Focus**: The image is in focus and not blurry.
-7.  **Expression**: The person has a relatively neutral expression (a slight smile is okay, but a wide grin or other expressive face is not).
-
-Return your response as a JSON object with two keys: "isValid" (boolean) and "feedback" (string).
-- If the image fails ANY of these criteria, set "isValid" to false and provide a single, concise sentence in "feedback" explaining the main reason for rejection (e.g., "The subject's face is obscured by shadows.", "The photo is blurry.", "Please remove glasses for the photo.", "The subject is not facing the camera directly.").
-- If the image is suitable, set "isValid" to true and set "feedback" to "The photo is a good starting point for a passport photo."`;
+// Passport Photo Constants
 
 export const COUNTRY_SPECS: CountrySpec[] = [
-    { 
-        name: 'United States', 
-        photoSizeMM: { width: 51, height: 51 }, // 2x2 inches
-        headHeightPercentage: { min: 50, max: 69 },
-        allowedBackgrounds: ['white', 'off-white'],
-        otherRequirements: [
-            'Subject must have a neutral facial expression with both eyes open.',
-            'Taken in the last 6 months to reflect your current appearance.',
-            'Full face in view, facing the camera directly.',
-            'No glasses (unless a medical statement is provided).',
-            'Photo must be in color.'
-        ]
-    },
-    { 
-        name: 'United Kingdom', 
-        photoSizeMM: { width: 35, height: 45 },
-        headHeightPercentage: { min: 64, max: 75 }, // Head height between 29mm and 34mm
-        allowedBackgrounds: ['light grey', 'cream'],
-        otherRequirements: [
-            'Neutral expression and mouth closed.',
-            'Nothing covering the face.',
-            'No shadows on the face or behind you.',
-            'Eyes must be open and visible, with no hair in front of them.',
-            'No red-eye.'
-        ]
-    },
-    { 
-        name: 'Schengen Area', 
-        photoSizeMM: { width: 35, height: 45 },
-        headHeightPercentage: { min: 70, max: 80 }, // Head height between 32mm and 36mm
-        allowedBackgrounds: ['light grey', 'light blue', 'white'],
-        otherRequirements: [
-            'The face must be sharply focused, clear, and with high contrast.',
-            'The head must be facing forward, not tilted.',
-            'Mouth must be closed. A neutral expression is required.',
-            'The photo must be no more than 6 months old.'
-        ]
-    },
-    { 
-        name: 'Canada', 
-        photoSizeMM: { width: 50, height: 70 },
-        headHeightPercentage: { min: 44, max: 51 }, // Head height between 31mm and 36mm
-        allowedBackgrounds: ['white', 'light grey'],
-        otherRequirements: [
-            'A neutral facial expression (no smiling, mouth closed) is required.',
-            'The photo must be clear, sharp, and in focus.',
-            'Uniform lighting and no shadows, glare, or flash reflections.',
-            'Face and shoulders must be centered and squared to the camera.'
-        ]
-    },
-    { 
-        name: 'Australia', 
-        photoSizeMM: { width: 35, height: 45 },
-        headHeightPercentage: { min: 71, max: 80 }, // Head height between 32mm and 36mm
-        allowedBackgrounds: ['light grey', 'white'],
-        otherRequirements: [
-            'Good quality, colour print, less than six months old.',
-            'Clear, focused image with no marks or \'red eye\'.',
-            'Plain white or light grey background that contrasts with your face.',
-            'Uniform lighting (no shadows or reflections) on the face.'
-        ]
-    },
+  {
+    name: 'United States',
+    photoSizeMM: { width: 51, height: 51 }, // 2x2 inches
+    headHeightPercentage: { min: 50, max: 69 },
+    allowedBackgrounds: ['white', 'off-white'],
+    otherRequirements: [
+      'Subject must directly face the camera.',
+      'Expression must be neutral with both eyes open.',
+      'No shadows on the face or background.',
+      'No glasses (unless a medical statement is provided).',
+      'No hats or head coverings (unless for religious or medical reasons with a signed statement).',
+    ],
+  },
+  {
+    name: 'Schengen Visa (Europe)',
+    photoSizeMM: { width: 35, height: 45 },
+    headHeightPercentage: { min: 70, max: 80 },
+    allowedBackgrounds: ['light grey', 'light blue', 'white'],
+    otherRequirements: [
+        'Subject must directly face the camera.',
+        'Expression must be neutral with mouth closed.',
+        'The photo must be recent, taken within the last 6 months.',
+        'No reflections, shadows, or red-eye.',
+    ],
+  },
+  {
+    name: 'Canada',
+    photoSizeMM: { width: 50, height: 70 },
+    headHeightPercentage: { min: 44, max: 51 }, // 31mm to 36mm head height
+    allowedBackgrounds: ['white', 'light-colored'],
+    otherRequirements: [
+      'The back of the photos must include the date the photo was taken, and the name and complete address of the photo studio.',
+      'Expression must be neutral.',
+      'Must show the top of the shoulders.',
+    ],
+  },
+   {
+    name: 'China',
+    photoSizeMM: { width: 33, height: 48 },
+    headHeightPercentage: { min: 58, max: 75 },
+    allowedBackgrounds: ['white'],
+    otherRequirements: [
+      'No jewelry that obstructs facial features.',
+      'Ears must be visible.',
+      'A white background is strictly required.',
+      'The space between the head and the top edge should be 3-5mm.'
+    ],
+  },
 ];
 
-export const PASSPORT_FORMAL_ATTIRE: { label: string, value: string }[] = [
-    { label: "No Change", value: "no change" },
-    { label: "Dark Suit, White Shirt, Tie", value: "a professional dark business suit, a crisp white collared shirt, and a classic tie" },
-    { label: "Dark Blouse/Jacket", value: "a professional dark blazer or blouse with a high neckline" }
-];
-
-export const PORTRAIT_ASPECT_RATIOS: { label: string, value: string }[] = [
-    { label: "Portrait (4:5)", value: "4:5" },
-    { label: "Square (1:1)", value: "1:1" },
-    { label: "Landscape (16:9)", value: "16:9" },
-    { label: "Widescreen (2:1)", value: "2:1" }
-];
-
-export const PORTRAIT_PROMPT_BUILDER_OPTIONS: OptionGroup[] = [
-    {
-        label: "Setting",
-        options: [
-            { label: "Modern Office", value: "in a bright, modern office with a blurred background" },
-            { label: "Lush Garden", value: "in a vibrant, lush garden with soft, natural light" },
-            { label: "City Rooftop", value: "on a city rooftop at dusk with a stunning skyline view" },
-            { label: "Cozy Library", value: "in a cozy, classic library filled with books" },
-            { label: "Minimalist Studio", value: "against a clean, minimalist studio backdrop" },
-        ]
-    },
-    {
-        label: "Pose / Action",
-        options: [
-            { label: "Standing Confidently", value: "standing confidently, with shoulders slightly angled" },
-            { label: "Sitting at a Desk", value: "sitting at a clean, modern desk, looking towards the camera" },
-            { label: "Leaning Casually", value: "leaning casually against a textured wall" },
-            { label: "Candid Laughter", value: "in a moment of candid, natural laughter" },
-            { label: "Holding a Coffee Mug", value: "holding a warm coffee mug with both hands" },
-        ]
-    },
-    {
-        label: "Expression",
-        options: [
-            { label: "Gentle Smile", value: "with a gentle, friendly, and approachable smile" },
-            { label: "Neutral & Focused", value: "with a neutral and focused expression, looking directly at the camera" },
-            { label: "Confident Look", value: "with a confident, determined look" },
-            { label: "Thoughtful Gaze", value: "with a thoughtful gaze, looking slightly away from the camera" },
-        ]
-    }
-];
-
-
-type Attire = { name: string; prompt: string };
-type Wardrobe = {
-  upper: Attire[];
-  lower: Attire[];
-};
-type AttireCollection = {
-  [key: string]: Wardrobe;
+export const PASSPORT_BG_PROMPTS: { [key: string]: string } = {
+  'white': 'a plain, uniform, and solid bright white background',
+  'off-white': 'a plain, uniform, and solid off-white background',
+  'light grey': 'a plain, uniform, and solid light grey background',
+  'light blue': 'a plain, uniform, and solid light blue background',
+  'light-colored': 'a plain, uniform, and solid light-colored background, typically white or light grey',
 };
 
-export const PORTRAIT_ATTIRE: AttireCollection = {
-    'Man': {
-        upper: [
-            { name: "No Change", prompt: "" },
-            { name: "Crisp White T-Shirt", prompt: "wearing a crisp, clean white t-shirt" },
-            { name: "Navy Blue Suit Jacket", prompt: "wearing a well-fitted navy blue suit jacket over a white dress shirt" },
-            { name: "Casual Denim Shirt", prompt: "wearing a casual, light-wash denim shirt" },
-            { name: "Gray Hoodie", prompt: "wearing a comfortable gray hoodie" },
-            { name: "Black Leather Jacket", prompt: "wearing a stylish black leather jacket over a t-shirt" },
-        ],
-        lower: [
-            { name: "No Change", prompt: "" },
-            { name: "Dark Wash Jeans", prompt: "wearing dark wash denim jeans" },
-            { name: "Khaki Chinos", prompt: "wearing classic khaki chinos" },
-            { name: "Black Trousers", prompt: "wearing sharp black trousers" },
-        ]
-    },
-    'Woman': {
-        upper: [
-            { name: "No Change", prompt: "" },
-            { name: "Silk Blouse", prompt: "wearing an elegant silk blouse" },
-            { name: "Black Blazer", prompt: "wearing a professional, tailored black blazer" },
-            { name: "Knit Sweater", prompt: "wearing a cozy, cream-colored knit sweater" },
-            { name: "Striped T-Shirt", prompt: "wearing a classic striped long-sleeve t-shirt" },
-            { name: "Trench Coat", prompt: "wearing a timeless trench coat" },
-        ],
-        lower: [
-            { name: "No Change", prompt: "" },
-            { name: "Tailored Trousers", prompt: "wearing smart, tailored trousers" },
-            { name: "A-Line Skirt", prompt: "wearing a flattering A-line skirt" },
-            { name: "Slim-Fit Jeans", prompt: "wearing stylish slim-fit jeans" },
-        ]
-    },
-    'Boy': {
-        upper: [
-            { name: "No Change", prompt: "" },
-            { name: "Graphic T-Shirt", prompt: "wearing a fun graphic t-shirt" },
-            { name: "Polo Shirt", prompt: "wearing a smart polo shirt" },
-            { name: "Zip-Up Hoodie", prompt: "wearing a sporty zip-up hoodie" },
-            { name: "Collared Shirt", prompt: "wearing a neat collared button-down shirt" },
-        ],
-        lower: [
-            { name: "No Change", prompt: "" },
-            { name: "Jeans", prompt: "wearing comfortable jeans" },
-            { name: "Cargo Shorts", prompt: "wearing practical cargo shorts" },
-            { name: "Jogger Pants", prompt: "wearing trendy jogger pants" },
-        ]
-    },
-     'Girl': {
-        upper: [
-            { name: "No Change", prompt: "" },
-            { name: "Embroidered Top", prompt: "wearing a cute top with embroidery" },
-            { name: "Denim Jacket", prompt: "wearing a classic denim jacket" },
-            { name: "Cozy Cardigan", prompt: "wearing a soft, cozy cardigan" },
-            { name: "Peter Pan Collar Blouse", prompt: "wearing a sweet blouse with a Peter Pan collar" },
-        ],
-        lower: [
-            { name: "No Change", prompt: "" },
-            { name: "Jean Skirt", prompt: "wearing a stylish jean skirt" },
-            { name: "Leggings", prompt: "wearing comfortable, colorful leggings" },
-            { name: "Tutu Skirt", prompt: "wearing a fun tutu skirt" },
-        ]
-    },
-};
+export const PASSPORT_FORMAL_ATTIRE: Option[] = [
+  { label: 'Keep Original Attire', value: 'no change' },
+  { label: 'Dark Suit, White Shirt, Tie', value: 'a formal dark business suit with a crisp white collared shirt and a conservative tie' },
+  { label: 'Dark Suit, White Shirt (No Tie)', value: 'a formal dark business suit with a crisp white collared shirt, buttoned up' },
+  { label: 'Blouse (Formal)', value: 'a simple, high-necked formal blouse in a solid dark color like navy or black' },
+  { label: 'Collared Shirt (Dark)', value: 'a simple, dark-colored collared polo or dress shirt' },
+];
+
+export const PASSPORT_VALIDATION_PROMPT = `
+  Analyze the user-provided image to determine if it's suitable as a starting point for a passport photo. 
+  The user is about to convert this into an official passport photo. 
+  Check for the following potential issues and provide a clear, user-friendly "feedback" message if any are found.
+  The 'isValid' flag should be false if any critical issue is detected.
+
+  Critical Issues (isValid: false):
+  1.  **Face not visible or obstructed**: Is the face heavily shadowed, turned away, covered by hands/hair, or otherwise not clearly visible?
+  2.  **Multiple people**: Are there multiple people in the photo?
+  3.  **Non-human subject**: Is the subject an animal, cartoon, or object?
+  4.  **Extreme angle**: Is the photo taken from a very high or low angle?
+  5.  **Very low resolution/blurry**: Is the image extremely blurry or pixelated?
+  6.  **Wearing hats, sunglasses, or headphones**: Are there any accessories that would obviously disqualify a passport photo? (Regular glasses are okay for this initial check).
+
+  Warnings (isValid: true, but provide feedback):
+  1.  **Busy Background**: "The background is a bit busy, but our AI will replace it for you."
+  2.  **Smiling or non-neutral expression**: "Your expression isn't neutral, but our AI will attempt to correct it. For best results, use a photo with a neutral expression."
+  3.  **Uneven lighting**: "The lighting is a bit uneven, but our AI will try to fix it."
+
+  If the image is good, set 'isValid' to true and provide positive feedback like "This photo is a great starting point!".
+  Your response must be in JSON format.
+`;
+
+// Portrait Generator Constants
+
+export const PORTRAIT_SCENES: Scene[] = [
+    { id: 'office', name: 'Professional Office', prompt: 'a modern, bright, and professional office setting, with a blurred background of bookshelves and a window', thumbnail: '/thumbnails/office.jpg' },
+    { id: 'cafe', name: 'Cozy Cafe', prompt: 'a warm and inviting cafe with soft lighting, sitting at a wooden table with a latte', thumbnail: '/thumbnails/cafe.jpg' },
+    { id: 'outdoor_park', name: 'Sunny Park', prompt: 'an outdoor park on a sunny day with lush green trees and foliage blurred in the background', thumbnail: '/thumbnails/outdoor_park.jpg' },
+    { id: 'studio_gray', name: 'Studio (Gray)', prompt: 'a professional photo studio with a solid, textured medium-gray background and professional lighting', thumbnail: '/thumbnails/studio_gray.jpg' },
+    { id: 'library', name: 'Classic Library', prompt: 'a classic library with rich, dark wood bookshelves filled with old books, creating a studious and elegant atmosphere', thumbnail: '/thumbnails/library.jpg' },
+    { id: 'city_street', name: 'Urban Street', prompt: 'a vibrant city street with blurred background lights (bokeh), giving a modern and dynamic feel', thumbnail: '/thumbnails/city_street.jpg' },
+];
+
+export const PORTRAIT_WARDROBE: WardrobeItem[] = [
+    { id: 'no_change', name: 'Keep Original', prompt: 'The person\'s clothing must remain completely unchanged from the original photo.', thumbnail: '/thumbnails/no_change.png' },
+    { id: 'business_suit', name: 'Business Suit', prompt: 'wearing a sharp, well-fitted dark navy blue or charcoal gray business suit with a crisp white shirt.', thumbnail: '/thumbnails/business_suit.jpg' },
+    { id: 'casual_sweater', name: 'Casual Sweater', prompt: 'wearing a comfortable and stylish merino wool sweater in a neutral color like gray or beige.', thumbnail: '/thumbnails/casual_sweater.jpg' },
+    { id: 'blouse', name: 'Elegant Blouse', prompt: 'wearing a professional and elegant silk blouse in a jewel tone like emerald green or sapphire blue.', thumbnail: '/thumbnails/blouse.jpg' },
+    { id: 'turtleneck', name: 'Black Turtleneck', prompt: 'wearing a classic, sophisticated black turtleneck sweater.', thumbnail: '/thumbnails/turtleneck.jpg' },
+    { id: 'denim_jacket', name: 'Denim Jacket', prompt: 'wearing a stylish, modern denim jacket over a simple white t-shirt for a creative and approachable look.', thumbnail: '/thumbnails/denim_jacket.jpg' },
+];
