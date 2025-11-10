@@ -17,3 +17,14 @@ export interface ValidationResult {
   isValid: boolean;
   feedback: string;
 }
+
+// Types for the new AI Wardrobe feature
+export interface AttireOption extends Option {
+  // Can be extended with image URLs for thumbnails in the future
+}
+
+export type WardrobeCategory = 'man' | 'woman' | 'boy' | 'girl';
+
+export type WardrobeCollection = {
+  [key in WardrobeCategory]: AttireOption[];
+};

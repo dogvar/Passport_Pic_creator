@@ -4,9 +4,10 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import ResultDisplay from '../../components/ResultDisplay';
 import OptionSelector from '../../components/OptionSelector';
 import ComplianceChecklist from '../../components/ComplianceChecklist';
+import WardrobeSelector from '../../components/WardrobeSelector';
 import { generateImage, validateImage } from '../../services/geminiService';
-import { PORTRAIT_BACKGROUNDS, PORTRAIT_POSES, PORTRAIT_EXPRESSIONS, PORTRAIT_STYLES } from '../../constants';
-import { ValidationResult } from '../../types';
+import { PORTRAIT_BACKGROUNDS, PORTRAIT_POSES, PORTRAIT_EXPRESSIONS, PORTRAIT_STYLES, PORTRAIT_ATTIRE } from '../../constants';
+import { ValidationResult, WardrobeCategory } from '../../types';
 
 type Stage = 'upload' | 'validating' | 'options' | 'processing' | 'result';
 
@@ -22,10 +23,15 @@ const PortraitGenerator: React.FC = () => {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [fileName, setFileName] = useState('portrait.png');
+  
+  // State for portrait options
   const [background, setBackground] = useState(PORTRAIT_BACKGROUNDS[0].value);
   const [pose, setPose] = useState(PORTRAIT_POSES[0].value);
   const [expression, setExpression] = useState(PORTRAIT_EXPRESSIONS[0].value);
   const [style, setStyle] = useState(PORTRAIT_STYLES[0].value);
+  const [attireCategory, setAttireCategory] = useState<WardrobeCategory>('man');
+  const [attire, setAttire] = useState('no change to attire');
+
   const [error, setError] = useState<string | null>(null);
 
   const handleImageUpload = useCallback(async (base64Image: string, file: File) => {
@@ -53,13 +59,13 @@ const PortraitGenerator: React.FC = () => {
     setStage('processing');
     setError(null);
 
-    const prompt = `Using the user's photo, create a professional portrait with a standard portrait aspect ratio (e.g., 4:5 or 3:4), making it larger and more suitable for a profile picture than a square passport photo.
-- **Lighting**: First, correct any uneven lighting or harsh shadows from the original photo to create a flattering and professional look.
-- Background: Replace the background with a realistic scene of ${background}.
-- Pose: Subtly adjust the person's pose to be a ${pose}.
-- Expression: Refine their facial expression to be a ${expression}.
-- Style: Apply a ${style} stylistic filter to the image.
-- The final result should be high-quality and suitable for a professional profile like LinkedIn.`;
+    const prompt = `You are an expert portrait photographer's AI assistant. Your task is to transform the user's photo into a high-quality, professional portrait. Follow these steps in order, treating them as strict rules:
+1.  **CRITICAL RULE**: Preserve the person's facial features and identity with 100% accuracy. Do not alter their face, hair, or head shape. This is your highest priority.
+2.  **Lighting and Quality**: First, correct any uneven lighting or harsh shadows in the original photo to create a flattering, professional, and well-lit look. Enhance the overall image quality.
+3.  **Attire**: ${attire !== 'no change to attire' ? `Change the person's clothing to '${attire}'. The new clothing should look realistic, natural, and fit their body shape and pose.` : 'Keep their original clothing.'}
+4.  **Pose and Expression**: Subtly adjust the person's pose to be a '${pose}' and refine their facial expression to be '${expression}'. Ensure these changes are minor and look natural.
+5.  **Background**: Replace the original background with a realistic scene of '${background}'. Ensure the lighting on the person matches the new background.
+6.  **Final Composition**: The final image must be a high-resolution portrait with a standard portrait aspect ratio (like 4:5 or 3:4, not square). Apply a '${style}' stylistic filter. The result should be suitable for a professional profile like LinkedIn.`;
 
     try {
       const generated = await generateImage(originalImage, prompt);
@@ -69,7 +75,7 @@ const PortraitGenerator: React.FC = () => {
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
       setStage('options');
     }
-  }, [originalImage, background, pose, expression, style]);
+  }, [originalImage, background, pose, expression, style, attire]);
   
   const handleReset = useCallback(() => {
     setStage('upload');
@@ -80,6 +86,8 @@ const PortraitGenerator: React.FC = () => {
     setPose(PORTRAIT_POSES[0].value);
     setExpression(PORTRAIT_EXPRESSIONS[0].value);
     setStyle(PORTRAIT_STYLES[0].value);
+    setAttireCategory('man');
+    setAttire('no change to attire');
   }, []);
 
   const handleDownload = useCallback(() => {
@@ -112,8 +120,17 @@ const PortraitGenerator: React.FC = () => {
         return (
           <div className="flex flex-col items-center gap-6 animate-fade-in">
             <h3 className="text-2xl font-bold text-gray-100">Create Your Perfect Portrait</h3>
-            <img src={`data:image/jpeg;base64,${originalImage}`} alt="Preview" className="max-h-48 w-auto rounded-lg shadow-lg" />
-            <div className="w-full max-w-md grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <img src={`data:image/jpeg;base64,${originalImage}`} alt="Preview" className="max-h-40 w-auto rounded-lg shadow-lg" />
+            
+            <WardrobeSelector
+              collection={PORTRAIT_ATTIRE}
+              selectedCategory={attireCategory}
+              onCategoryChange={setAttireCategory}
+              selectedAttire={attire}
+              onAttireChange={setAttire}
+            />
+
+            <div className="w-full max-w-2xl grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
               <OptionSelector label="Background" options={PORTRAIT_BACKGROUNDS} value={background} onChange={setBackground} />
               <OptionSelector label="Pose" options={PORTRAIT_POSES} value={pose} onChange={setPose} />
               <OptionSelector label="Expression" options={PORTRAIT_EXPRESSIONS} value={expression} onChange={setExpression} />

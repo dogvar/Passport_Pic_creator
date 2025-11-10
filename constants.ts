@@ -1,4 +1,4 @@
-import { PassportCountry, Option } from './types';
+import { PassportCountry, Option, WardrobeCollection } from './types';
 
 export const PASSPORT_COUNTRIES: PassportCountry[] = [
   { 
@@ -73,6 +73,38 @@ export const FORMAL_ATTIRE: Option[] = [
   { label: 'Professional Blouse', value: 'a professional, high-collared blouse' },
   { label: 'No Change', value: 'no change to attire' },
 ];
+
+export const PORTRAIT_ATTIRE: WardrobeCollection = {
+  man: [
+    { label: 'Leather Jacket', value: 'a stylish black leather jacket over a grey t-shirt' },
+    { label: 'Knit Sweater', value: 'a cozy, warm knitted turtleneck sweater' },
+    { label: 'Denim Jacket', value: 'a classic casual blue denim jacket' },
+    { label: 'Business Blazer', value: 'a smart business blazer with an open-collar shirt' },
+    { label: 'Polo Shirt', value: 'a crisp, well-fitting polo shirt' },
+  ],
+  woman: [
+    { label: 'Silk Blouse', value: 'an elegant and professional silk blouse' },
+    { label: 'Turtleneck Sweater', value: 'a chic and comfortable turtleneck sweater' },
+    { label: 'Business Blazer', value: 'a modern, professional business blazer over a simple top' },
+    { label: 'Sundress', value: 'a casual and bright floral sundress' },
+    { label: 'Leather Jacket', value: 'a fashionable black leather jacket' },
+  ],
+  boy: [
+    { label: 'Hoodie & T-Shirt', value: 'a cool hoodie over a graphic t-shirt' },
+    { label: 'Polo Shirt', value: 'a smart polo shirt' },
+    { label: 'Sweater', value: 'a comfortable crew-neck sweater' },
+    { label: 'Jacket', value: 'a stylish lightweight jacket' },
+    { label: 'Collared Shirt', value: 'a button-up collared shirt' },
+  ],
+  girl: [
+    { label: 'Floral Dress', value: 'a cute floral pattern dress' },
+    { label: 'Denim Jacket', value: 'a stylish denim jacket over a plain t-shirt' },
+    { label: 'Sweater', value: 'a cozy knitted sweater' },
+    { label: 'Hoodie', value: 'a comfortable and colorful hoodie' },
+    { label: 'Blouse', value: 'a pretty blouse with simple embroidery' },
+  ],
+};
+
 
 export const PORTRAIT_BACKGROUNDS: Option[] = [
   { label: 'Modern Office', value: 'a bright, modern office with blurred background' },
